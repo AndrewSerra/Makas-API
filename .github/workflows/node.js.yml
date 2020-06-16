@@ -12,7 +12,7 @@ on:
 jobs:
   build:
 
-    runs-on: centos-7
+    runs-on: [self-hosted, linux]
 
     strategy:
       matrix:
