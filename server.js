@@ -22,9 +22,10 @@ const PORT = 3000;
 MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
     if(err) throw err;
     
-    console.log('Connected to MongoDB...');
+    console.log('MongoDB conecction test successful...');
 
     check_setup(client.db('dev_test'));
+    db.close();
 })
 
 // Add the routes to the app
