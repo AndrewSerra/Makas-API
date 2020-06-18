@@ -19,13 +19,19 @@ function check_setup(db) {
             // in the database create it.
             if(!db_collections.includes(name)) {
                 // Get the schema with the name of missing collection
-                const schema = require(`./schema/${name}`);
+                try {
+                    const schema = require(`./schema/${name}`);
 
-                db.createCollection(name, {
-                    validator: {
-                        $jsonSchema: schema
-                    }
-                })
+                    db.createCollection(name, {
+                        validator: {
+                            $jsonSchema: schema
+                        }
+                    })
+                } catch (error) {
+                    console.log("Check the names in the array collection_names, and the schema file names. They have to match.");
+                    console.log(`Error: ${error.message}. Could not create collection for "${name}"`);
+                    break;
+                }
             }
         }
     });
