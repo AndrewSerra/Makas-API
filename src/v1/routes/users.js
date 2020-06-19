@@ -16,7 +16,7 @@ router.post("/", schemaValidator.validateSchema('user'), (req,res) => {
         if(err) throw err;
 
        client.db('dev_test').collection('user').insertOne(req.body);
-       console.log('data inserted');
+       console.log('Data inserted.');
     });
 });
 
@@ -24,7 +24,6 @@ router.post("/", schemaValidator.validateSchema('user'), (req,res) => {
 //request with body will find users that suits the data in body
 // request without body will find all users
 router.get("/", (req,res) => {
-    //res.send(req.body).status(201).end();
     MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
         if(err) throw err;
 

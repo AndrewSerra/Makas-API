@@ -1,5 +1,13 @@
 // This is the validator schema for the Business model
 // It should be used as the $jsonSchema in validation
+
+
+/* pls add:
+-services that business can provide for customers
+-employees object,
+-working hours
+*/
+
 module.exports = {
     bsonType: "object",
     required: ["name", "address", "geo_loc"],
@@ -50,7 +58,7 @@ module.exports = {
                 }
             }
         },
-        description: { 
+        description: {
             bsonType: "string",
             description: "The description is a short explanation about the business, not required"
         },

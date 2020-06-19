@@ -3,6 +3,7 @@ const cors = require('cors');
 const express = require('express');
 const dotenv = require('dotenv');
 const MongoClient = require('mongodb').MongoClient;
+const check_setup = require('./src/v1/setup');
 
 // Routers for versions of the API
 const routerV1 = require('./src/v1/routes/main');
@@ -23,10 +24,7 @@ MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
 
     console.log('Connected to MongoDB...');
 
-    client.db('dev_test').listCollections().toArray(function(err, items) {
-        if(err) throw err;
-        console.log(items);
-    });
+    check_setup(client.db('dev_test'));
 });
 
 // Add the routes to the app

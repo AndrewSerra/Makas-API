@@ -2,7 +2,7 @@
 
 module.exports = {
     bsonType: "object",
-    required: ["name", "contact"],
+    required: ["name", "contact","password"],
     properties: {
         name:{
             bsonType: "string",
@@ -46,6 +46,10 @@ module.exports = {
                     }
                 },
             }
+        },
+        password:{
+            bsonType: "string",
+            description: "user login password",
         },
         appointments:{
             bsonType: "object",
@@ -94,4 +98,4 @@ module.exports = {
             }
         }
     }
-}
+};
