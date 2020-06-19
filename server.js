@@ -20,16 +20,16 @@ const PORT = 3000;
 // Later it will be changed to production when needed
 MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
     if(err) throw err;
-    
+
     console.log('Connected to MongoDB...');
-    
-    client.db('dev-test').listCollections().toArray(function(err, items) {
+
+    client.db('dev_test').listCollections().toArray(function(err, items) {
         if(err) throw err;
         console.log(items);
     });
-})
+});
 
 // Add the routes to the app
 app.use('/v1', routerV1);
 
-app.listen(PORT, () => console.log(`Listening on port ${PORT}`)); 
+app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
