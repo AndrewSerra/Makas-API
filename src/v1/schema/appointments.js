@@ -52,8 +52,8 @@ module.exports = {
 
         },
         status:{
-            bsonType: "string",
-            description: "This is a string and it is required. (if reservation is set or pending a response)",
+            enum: ["set", "pending"],
+            description: "Choose which customer gender you work with."
         },
 
     }
