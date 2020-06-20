@@ -10,7 +10,14 @@
 
 module.exports = {
     bsonType: "object",
-    required: ["name", "address", "geo_loc"],
+    required: [
+        "name", 
+        "address", 
+        "geo_loc", 
+        "contact",
+        "password",
+        "created"
+    ],
     properties: {
         name: {
             bsonType: "string",
@@ -18,7 +25,6 @@ module.exports = {
         },
         address: {
             bsonType: "object",
-            required: ["street", "city", "country"],
             properties: {
                 street: {
                     bsonType: "string",
@@ -30,26 +36,24 @@ module.exports = {
                 },
                 country: {
                     bsonType: "string",
-                    description: "The city should be a string and it is required"
+                    description: "The country should be a string and it is required"
                 }
             }
         },
         geo_loc: {
             bsonType: "object",
-            required: ["lat", "lon"],
             properties: {
-                lat: { bsonType: "float" },
-                lon: { bsonType: "float" }
+                lat: { bsonType: "double" },
+                lon: { bsonType: "double" }
             }
         },
         contact: {
             bsonType: "object",
-            required: ["email"],
             properties: {
                 phone: {
                     bsonType: "string",
                     description: "Cell phone number is checked by regex",
-                    pattern: "^\d-\d-\d$"
+                    // pattern: "^\d-\d-\d$"
                 },
                 email: {
                     bsonType: "string",
@@ -84,7 +88,11 @@ module.exports = {
         },
         gender: {
             enum: ["male", "female", "both"],
-            description: "Choose which customer gender you work with."
+            description: "Choose which customer gender you work with.",
+        },
+        created: {
+            bsonType: "date",
+            description: "Date that the business created the account."
         }
     }
 }

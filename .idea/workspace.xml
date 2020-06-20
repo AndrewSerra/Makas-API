@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9e688e5c-a564-4b66-97e1-e6957edf9ca5" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Makas-API.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="9e688e5c-a564-4b66-97e1-e6957edf9ca5" name="Default Changelist" comment="Merge branch 'master' into user&#10;&#10;# Conflicts:&#10;#&#9;package.json&#10;#&#9;server.js&#10;#&#9;src/v1/routes/businesses.js&#10;#&#9;src/v1/setup.js">
+      <change afterPath="$PROJECT_DIR$/src/v1/__tests__/entry_checker.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/v1/utils/dbConnectionOptions.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/v1/utils/entry_checker.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/v1/utils/status_codes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/v1/routes/appointments.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/v1/routes/appointments.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/v1/routes/users.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/v1/routes/users.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/v1/schema/appointments.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/v1/schema/appointments.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/v1/schema/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/v1/schema/user.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/v1/__tests__/sample.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/v1/routes/businesses.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/v1/routes/businesses.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/v1/schema/business.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/v1/schema/business.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,8 +30,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/server.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="39" lean-forward="true" selection-start-line="26" selection-start-column="39" selection-end-line="26" selection-end-column="39" />
+            <state relative-caret-position="480">
+              <caret line="32" column="65" selection-start-line="32" selection-start-column="65" selection-end-line="32" selection-end-column="65" />
             </state>
           </provider>
         </entry>
@@ -37,35 +39,38 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/v1/schema/business.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1272">
-              <caret line="86" column="36" selection-start-line="86" selection-start-column="36" selection-end-line="86" selection-end-column="36" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/v1/schema/user.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="38" lean-forward="true" selection-start-line="26" selection-start-column="38" selection-end-line="26" selection-end-column="38" />
+            <state relative-caret-position="1335">
+              <caret line="90" column="36" selection-start-line="90" selection-start-column="36" selection-end-line="90" selection-end-column="36" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/v1/routes/users.js">
+        <entry file="file://$PROJECT_DIR$/src/v1/routes/businesses.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1045">
-              <caret line="72" selection-start-line="72" selection-end-line="72" />
+            <state relative-caret-position="120">
+              <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="4" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/v1/schema/schema_validator.js">
+        <entry file="file://$PROJECT_DIR$/src/v1/setup.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="13" selection-end-column="5" />
+            <state relative-caret-position="615">
+              <caret line="41" selection-start-line="41" selection-end-line="41" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/package.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="465">
+              <caret line="31" column="1" selection-start-line="31" selection-start-column="1" selection-end-line="31" selection-end-column="1" />
             </state>
           </provider>
         </entry>
@@ -79,20 +84,21 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/dev/client.js" />
-        <option value="$PROJECT_DIR$/src/v1/routes/businesses.js" />
         <option value="$PROJECT_DIR$/src/v1/schema/schema_validator.js" />
         <option value="$PROJECT_DIR$/src/v1/schema/service.js" />
         <option value="$PROJECT_DIR$/src/v1/schema/business.js" />
         <option value="$PROJECT_DIR$/src/v1/schema/employee.js" />
         <option value="$PROJECT_DIR$/src/setup.js" />
-        <option value="$PROJECT_DIR$/server.js" />
-        <option value="$PROJECT_DIR$/src/v1/setup.js" />
         <option value="$PROJECT_DIR$/src/v1/routes/main.js" />
         <option value="$PROJECT_DIR$/src/v1/schema/appointments.js" />
         <option value="$PROJECT_DIR$/src/v1/routes/appointments.js" />
         <option value="$PROJECT_DIR$/.env" />
         <option value="$PROJECT_DIR$/src/v1/schema/user.js" />
         <option value="$PROJECT_DIR$/src/v1/routes/users.js" />
+        <option value="$PROJECT_DIR$/src/v1/setup.js" />
+        <option value="$PROJECT_DIR$/package.json" />
+        <option value="$PROJECT_DIR$/server.js" />
+        <option value="$PROJECT_DIR$/src/v1/routes/businesses.js" />
       </list>
     </option>
   </component>
@@ -183,7 +189,7 @@
       <workItem from="1592395382245" duration="85000" />
       <workItem from="1592491106645" duration="5479000" />
       <workItem from="1592519160615" duration="14020000" />
-      <workItem from="1592586112946" duration="7518000" />
+      <workItem from="1592586112946" duration="8267000" />
     </task>
     <task id="LOCAL-00001" summary="-User create, get&#10;-schemaValidator">
       <created>1592568358677</created>
@@ -206,11 +212,18 @@
       <option name="project" value="LOCAL" />
       <updated>1592578679565</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="-check if email and phone exists before registering&#10;-get user by id">
+      <created>1592664583986</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1592664583986</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="29620000" />
+    <option name="totallyTimeSpent" value="30369000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -225,7 +238,7 @@
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26190478" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26190478" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="npm" order="2" side_tool="true" />
       <window_info id="Favorites" order="3" side_tool="true" />
@@ -240,7 +253,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.32959184" />
+      <window_info anchor="bottom" id="Terminal" order="11" visible="true" weight="0.32959184" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -254,7 +267,9 @@
     <MESSAGE value="-User create, get&#10;-schemaValidator" />
     <MESSAGE value="-appointments, employee, service schema drafts&#10;- appointments router is problematic" />
     <MESSAGE value="- appointments router is problematic(commented out)" />
-    <option name="LAST_COMMIT_MESSAGE" value="- appointments router is problematic(commented out)" />
+    <MESSAGE value="-check if email and phone exists before registering&#10;-get user by id" />
+    <MESSAGE value="Merge branch 'master' into user&#10;&#10;# Conflicts:&#10;#&#9;package.json&#10;#&#9;server.js&#10;#&#9;src/v1/routes/businesses.js&#10;#&#9;src/v1/setup.js" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge branch 'master' into user&#10;&#10;# Conflicts:&#10;#&#9;package.json&#10;#&#9;server.js&#10;#&#9;src/v1/routes/businesses.js&#10;#&#9;src/v1/setup.js" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/routes/businesses.js" />
@@ -295,34 +310,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/server.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="39" lean-forward="true" selection-start-line="26" selection-start-column="39" selection-end-line="26" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/v1/routes/businesses.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" column="4" selection-start-line="7" selection-start-column="4" selection-end-line="7" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/v1/schema/schema_validator.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="150">
           <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="13" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/v1/setup.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="26" />
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -346,13 +337,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/v1/schema/business.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1272">
-          <caret line="86" column="36" selection-start-line="86" selection-start-column="36" selection-end-line="86" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/v1/schema/user.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
@@ -362,8 +346,46 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/v1/routes/users.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1045">
+        <state relative-caret-position="1073">
           <caret line="72" selection-start-line="72" selection-end-line="72" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/v1/setup.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="615">
+          <caret line="41" selection-start-line="41" selection-end-line="41" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/package.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="465">
+          <caret line="31" column="1" selection-start-line="31" selection-start-column="1" selection-end-line="31" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/server.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="32" column="65" selection-start-line="32" selection-start-column="65" selection-end-line="32" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/v1/schema/business.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1335">
+          <caret line="90" column="36" selection-start-line="90" selection-start-column="36" selection-end-line="90" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/v1/routes/businesses.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="4" />
         </state>
       </provider>
     </entry>
