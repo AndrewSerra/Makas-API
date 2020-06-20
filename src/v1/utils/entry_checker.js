@@ -49,7 +49,7 @@ function business_entry_checker(business) {
     // Check if the required values are met
     let is_missing_fields = Object.values(required_keys).some(e => e === 1);
     reason = is_missing_fields ? reasons.MISSING_REQUIRED_FIELD : reason;
-    console.log(required_keys, is_missing_fields, reason)
+    
     return {
         valid: (!includes_undef && !is_missing_fields),
         reason: reason,
