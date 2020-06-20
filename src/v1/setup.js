@@ -1,12 +1,13 @@
+re
+
 // Check if collections in your database are already created
 // Create new collection if it does not appear
 
 function check_setup(db) {
     const collection_names = [
         "user",
-        "business",
-        "appointments"
-    ];
+        "business"
+    ]
 
     db.listCollections().toArray(function(err, items) {
         if(err) throw err;
