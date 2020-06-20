@@ -31,29 +31,27 @@ function business_entry_checker(business) {
         }
         if(value instanceof Object) {
             for(let [_, sub_value] of Object.entries(value)) {
-                // Value check for being null, undefined or emptry string
-                if(typeof(sub_value) === undefined || sub_value === null || sub_value === "") {
-                    includes_undef = false;
+                // Value check for being null, undefined or empty string
+                if(sub_value === null || sub_value === "" || sub_value === undefined) {
+                    includes_undef = true;
                     reason = reasons.CONTAINS_UNDEF;
-                    break;
                 }
             }
         }
         else {
-            // Value check for being null, undefined or emptry string
-            if(typeof(value) === undefined || value === null || value === "") {
-                includes_undef = false;
+            // Value check for being null, undefined or empty string
+            if(value === null || value === "" || value === undefined) {
+                includes_undef = true;
                 reason = reasons.CONTAINS_UNDEF;
-                break;
             }
         }
     }
     // Check if the required values are met
     let is_missing_fields = Object.values(required_keys).some(e => e === 1);
     reason = is_missing_fields ? reasons.MISSING_REQUIRED_FIELD : reason;
-    
+    console.log(required_keys, is_missing_fields, reason)
     return {
-        valid: includes_undef || !is_missing_fields,
+        valid: (!includes_undef && !is_missing_fields),
         reason: reason,
     }
 }
