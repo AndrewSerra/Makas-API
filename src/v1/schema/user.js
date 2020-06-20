@@ -2,7 +2,7 @@
 
 module.exports = {
     bsonType: "object",
-    required: ["name", "contact","password"],
+    required: ["name", "contact", "password"],
     properties: {
         name:{
             bsonType: "string",

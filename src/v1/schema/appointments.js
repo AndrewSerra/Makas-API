@@ -2,7 +2,7 @@
 
 module.exports = {
     bsonType: "object",
-    required: ["user","business","employee","time", "service", "status" ],
+    required: ["user","business"],//,"employee","time", "service", "status"
     properties: {
         user:{
             bsonType: "string",

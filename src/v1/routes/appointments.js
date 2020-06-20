@@ -8,12 +8,16 @@ const appointmentsModel = require("../schema/appointments");
 schemaValidator.addSchema(appointmentsModel,'appointments');
 
 
-router.post('/', function(req, res) {
+router.post('/', function(req, res){
     res.send(req.body);
     MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
         if(err) throw err;
 
-        client.db('dev_test').collection('appointments').insertOne(req.body);
+
+        client.db('dev_test').collection('appointments').insertOne(req.body, function (error, result) {
+            if(error) throw error;
+            console.log(result);
+        });
         console.log('Data inserted.');
 
 
