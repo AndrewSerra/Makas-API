@@ -4,6 +4,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const MongoClient = require('mongodb').MongoClient;
 const check_setup = require('./src/v1/setup');
+const options = require('./src/v1/utils/dbConnectionOptions');
 
 // Routers for versions of the API
 const routerV1 = require('./src/v1/routes/main');
@@ -17,15 +18,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const PORT = 3000;
 
-// It will connect to database test
+// It will connect to database dev_test
 // Later it will be changed to production when needed
+// This is just to test the connection on startup
 MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
     if(err) throw err;
-    
-    console.log('MongoDB conecction test successful...');
 
     check_setup(client.db('dev_test'));
-    db.close();
+
+    console.log('MongoDB connection test successful...');
+    client.close();
 })
 
 // Add the routes to the app
