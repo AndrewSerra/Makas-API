@@ -1,4 +1,3 @@
-re
 
 // Check if collections in your database are already created
 // Create new collection if it does not appear
