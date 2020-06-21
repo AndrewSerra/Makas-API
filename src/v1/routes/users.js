@@ -166,7 +166,7 @@ router.delete("/", (req,res) => {
     }
 });
 
-// TODO:
+
 
 // Add business to favorites: POST businessID to user.favorites
 router.put("/favorites", (req,res) =>{
@@ -178,11 +178,8 @@ router.put("/favorites", (req,res) =>{
 
         var myQuery = { _id: x};
         var newValues = {
-            $set: {
-                _id: x,
-                name: req.body.name,
-                contact: req.body.contact,
-                password: req.body.password,
+            $push: {
+
                 favorites: req.body.favorites
             }
         };
@@ -203,8 +200,104 @@ router.put("/favorites", (req,res) =>{
 });
 
 // Remove business from favorites: DELETE businessID from user.favorites
+router.delete("/favorites", (req,res) =>{
+    //only works if id is provided
+    if (req.body._id === undefined){
+        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
+    }else{
+        let x = ObjectID(req.body._id);
+
+        var myQuery = { _id: x};
+        var newValues = {
+            $pull: {
+
+                favorites: req.body.favorites
+            }
+        };
+        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
+            if(err) throw err;
+            client.db('dev_test').collection('user').updateOne(myQuery, newValues,function (err, response) {
+                if (err){
+                    res.status(status_codes.ERROR).send(err);
+                }else{
+                    if (response.result.ok || response !== null){
+                        res.sendStatus(status_codes.SUCCESS);
+                    }
+                }
+                client.close();
+            });
+        });
+    }
+});
+
+// TODO:
 // Apply for appointment: POST appointment
+router.put("/appointments", (req,res) =>{
+    //only works if id is provided
+    if (req.body._id === undefined){
+        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
+    }else{
+        let x = ObjectID(req.body._id);
+
+        var myQuery = { _id: x};
+        var newValues = {
+            $push: {
+                appointments: {
+                    future_appointments: {
+                        pending:req.body.appointments
+                    }
+                }
+
+            }
+        };
+        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
+            if(err) throw err;
+            client.db('dev_test').collection('user').updateOne(myQuery, newValues,{multi: true},function (err, response) {
+                if (err){
+                    res.status(status_codes.ERROR).send(err);
+                }else{
+                    if (response.result.ok || response !== null){
+                        res.sendStatus(status_codes.SUCCESS);
+                    }
+                }
+                client.close();
+            });
+        });
+    }
+});
+
 // Cancel appointment: DELETE appointment
+router.delete("/appointments", (req,res) =>{
+    //only works if id is provided
+    if (req.body._id === undefined){
+        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
+    }else{
+        let x = ObjectID(req.body._id);
+
+        var myQuery = { _id: x};
+        var newValues = {
+            $pull: {
+
+                favorites: req.body.favorites
+            }
+        };
+        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
+            if(err) throw err;
+            client.db('dev_test').collection('user').updateOne(myQuery, newValues,function (err, response) {
+                if (err){
+                    res.status(status_codes.ERROR).send(err);
+                }else{
+                    if (response.result.ok || response !== null){
+                        res.sendStatus(status_codes.SUCCESS);
+                    }
+                }
+                client.close();
+            });
+        });
+    }
+});
+
+
 // See appointments for future: GET appointments
 // See appointments for past: GET appointments
 
