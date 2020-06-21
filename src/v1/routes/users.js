@@ -107,11 +107,101 @@ router.get("/", (req,res) => {
     });
 });
 
+// Change user information: UPDATE user router.put
+router.put("/", (req,res) =>{
+    //only works if id is provided
+    if (req.body._id === undefined){
+        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
+    }else{
+        let x = ObjectID(req.body._id);
+
+        var myQuery = { _id: x};
+        var newValues = {
+            $set: {
+                _id: x,
+                name: req.body.name,
+                contact: req.body.contact,
+                password: req.body.password
+            }
+        };
+        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
+            if(err) throw err;
+            client.db('dev_test').collection('user').updateOne(myQuery, newValues, function (err, response) {
+                if (err){
+                    res.status(status_codes.ERROR).send(err);
+                }else{
+                    if (response.result.ok || response !== null){
+                        res.sendStatus(status_codes.SUCCESS);
+                    }
+                }
+                client.close();
+            });
+        });
+    }
+});
+
+// Deleting the account: DELETE user router delete
+
+router.delete("/", (req,res) => {
+    if (req.body._id === undefined){
+        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
+    }else{
+        let x = ObjectID(req.body._id);
+
+        var myQuery = { _id: x};
+
+        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
+            if(err) throw err;
+            client.db('dev_test').collection('user').deleteOne(myQuery, function (err, response) {
+                if (err){
+                    res.status(status_codes.ERROR).send(err);
+                }else{
+                    if (response.result.ok || response !== null){
+                        res.sendStatus(status_codes.SUCCESS);
+                    }
+                }
+                client.close();
+            });
+        });
+    }
+});
 
 // TODO:
-// Change user information: UPDATE user
-// Deleting the account: DELETE user
+
 // Add business to favorites: POST businessID to user.favorites
+router.put("/favorites", (req,res) =>{
+    //only works if id is provided
+    if (req.body._id === undefined){
+        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
+    }else{
+        let x = ObjectID(req.body._id);
+
+        var myQuery = { _id: x};
+        var newValues = {
+            $set: {
+                _id: x,
+                name: req.body.name,
+                contact: req.body.contact,
+                password: req.body.password,
+                favorites: req.body.favorites
+            }
+        };
+        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
+            if(err) throw err;
+            client.db('dev_test').collection('user').updateOne(myQuery, newValues,{multi: true},function (err, response) {
+                if (err){
+                    res.status(status_codes.ERROR).send(err);
+                }else{
+                    if (response.result.ok || response !== null){
+                        res.sendStatus(status_codes.SUCCESS);
+                    }
+                }
+                client.close();
+            });
+        });
+    }
+});
+
 // Remove business from favorites: DELETE businessID from user.favorites
 // Apply for appointment: POST appointment
 // Cancel appointment: DELETE appointment

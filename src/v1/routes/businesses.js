@@ -27,7 +27,7 @@ router.post('/', function(req, res, next) {
             if(err) throw err;
             business.password = hash;
         })
-    })
+    });
 
     // Only connects if the check is valid
     if(check_result.valid) {
