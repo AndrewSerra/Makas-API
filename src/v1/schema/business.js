@@ -5,7 +5,7 @@ module.exports = {
     required: [
         "name", 
         "address", 
-        "geo_loc", 
+        "location", 
         "contact",
         "password",
         "created"
@@ -32,11 +32,14 @@ module.exports = {
                 }
             }
         },
-        geo_loc: {
+        location: {
             bsonType: "object",
             properties: {
-                lat: { bsonType: "double" },
-                lon: { bsonType: "double" }
+                type: { bsonType: "string" },
+                coordinates: { 
+                    bsonType: "array",
+                    items: { bsonType: "double" } 
+                }
             }
         },
         contact: {
@@ -50,7 +53,7 @@ module.exports = {
                 email: {
                     bsonType: "string",
                     description: "Cell phone number is checked by regex",
-                    pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
+                    // pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
                 }
             }
         },
