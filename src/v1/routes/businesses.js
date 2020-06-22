@@ -6,6 +6,8 @@ const express = require('express');
 const status_codes = require('../utils/status_codes');
 const dotenv = require('dotenv').config();
 const options = require('../utils/dbConnectionOptions');
+const check_type = require('../utils/type_checker');
+const { Double } = require('mongodb');
 
 router = express.Router();
 
@@ -13,10 +15,18 @@ router = express.Router();
 // 1- Write tests for endpoints for POST /
 
 // Create a business for the first time
-router.post('/', function(req, res, next) {
+router.post('/', async function(req, res, next) {
 
     // Add the date and hashed password to the object
-    const business = { ...req.body, created: new Date() }
+    // Correct the location property format
+    const business = { 
+        ...req.body, 
+        location: {
+            type: "Point",
+            coordinates: req.body.location,
+        },
+        created: new Date() 
+    }
     // Check the values sent
     const check_result = checkers.business_entry_checker(business);
 
@@ -31,82 +41,146 @@ router.post('/', function(req, res, next) {
     
     // Only connects if the check is valid
     if(check_result.valid) {
-        MongoClient.connect(process.env.MONGO_URI, options, function(error, client) {
-            if(error) {
-                res.status(status_codes.ERROR).send(error);
-                next();
-            }
+        const client = await MongoClient.connect(process.env.MONGO_URI, options)
 
-            // Connect to database, get collection
-            const db = client.db('dev_test');
-            const collection = db.collection("business");
+        // Connect to database, get collection
+        const db = client.db('dev_test');
+        const collection = db.collection("business");
 
-            // Check if the business exists
-            const query = {
-                name: business.name,
-                geo_loc: {
-                    lat: business.geo_loc.lat,
-                    lon: business.geo_loc.lon,
-                },
+        // Check if the business exists
+        const query = {
+            name: business.name,
+            location: {
+                coordinates: business.location
+            },
+        }
+        const doc = await collection.findOne(query);  // Only returns the id as doc object
+               
+        if(doc) {
+            res.status(status_codes.CONFLICT).send("Business already exists");
+            client.close();
+            next();
+        }
+
+        // Insert the document to the database
+        collection.insertOne(business) 
+        .then(response => {
+            console.log(response)
+            // Success condition everything ok
+            if(response.result.ok || response !== null) {
+                res.sendStatus(status_codes.SUCCESS);
             }
-            collection.findOne(query, '_id', function(err, doc) {  // Only returns the id as doc object
-                if(err) throw err;
-                console.log(doc)
-                if(doc) {
-                    res.status(status_codes.CONFLICT).send("Business already exists");
-                    client.close();
-                    next();
-                }
-                
-                // Insert the document to the database
-                collection.insertOne(business, function(error, response) {
-                    if(error) {
-                        res.status(status_codes.ERROR).send(error);
-                    }
-                    // Success condition everything ok
-                    if(response.result.ok || response !== null) {
-                        res.sendStatus(status_codes.SUCCESS);
-                    }
-                    client.close();
-                })
-            })
         })
+        .catch(error => {
+            res.status(status_codes.ERROR).send(error);
+        }) 
+        .finally(_ => client.close());
     }
     else {
         res.status(status_codes.BAD_REQUEST).send(check_result.response);
     }
 })
 
-// Get specific business document
-router.get('/:businessId', function(req, res) {
-    MongoClient.connect(process.env.MONGO_URI, options, function(error, client) {
-        if(error) {
-            res.status(status_codes.ERROR).send(error);
-            next();
-        }
+// TODO: 
+// Get businesses with query parameters from the business search page 
+// Structure:
+// ?range=0.5&name=ekm&location=meksika+sokagi&date[day]=23&date[month]=01&date[year]=2020&time[hr]=10&time[min]=30&numDocs=10&offset=0
+router.get('/', async function(req, res, next) {
 
-        // Connect to database, get collection
-        const db = client.db('dev_test');
-        const collection = db.collection("business");
-        
-        // Excluding fields
-        const options = {
-            projection: {
-                password: 0,
-                created: 0,
+    // Scream at the developer who doesn't send proper data with their types
+    const scream = (error) => { res.status(status_codes.ERROR).send(error) }
+
+    const query_init = req.query;
+    const range = Number(query_init.range) ? Number(query_init.range) : 10;           // Defaults to 10km
+    const offset = Number(query_init.offset) ? Number(query_init.offset) : 0;         // Defaults to offset of 0
+    const num_docs =  Number(query_init.num_docs) ? Number(query_init.num_docs) : 10; // Defaults the limit to 10 docs
+
+    // Clean the  query object
+    for(let[key, value] of Object.entries(query_init)) {
+        if(value === undefined) {
+            delete query_init[key];
+        }
+        else if(key === "offset" || key === "numDocs" || key == "range") {
+            delete query_init[key];
+        }
+    }
+
+    // Correct location format 
+    let correct_format_loc = query_init.location.split(",");
+    correct_format_loc = correct_format_loc.map(loc => Double(loc));
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    if(!client) {
+        res.status(status_codes.ERROR).send(error);
+        next();
+    }
+    // Connect to database, get collection
+    const db = client.db('dev_test');
+    const collection = db.collection("business");
+
+    // Excluding fields
+    const query_options = {
+        projection: {
+            password: 0,
+            created: 0,
+        },
+        limit: num_docs,
+        skip: offset,
+    }
+    let query = {
+        name: {
+            $regex: new RegExp(query_init.name ? query_init.name : ""),
+            $options: 'i'
+        },
+        // address: { 
+        //     street: {
+        //         $regex: new RegExp(query_init.location_name ? query_init.location_name : ""),
+        //         $options: 'i'
+        //     }
+        // },
+        location: {
+            $nearSphere: {
+                $geometry: {
+                    type: "Point",
+                    coordinates: correct_format_loc,
+                },
+                $maxDistance: range * 1000  // 1000 meters
             }
         }
-        collection.findOne({ _id: ObjectId(req.params.businessId) }, options, function(error, doc) {
-            if(error) {
-                res.status(status_codes.ERROR).send(error);
-                client.close();
-                next();
-            }
-            if(doc) {
-                res.status(status_codes.SUCCESS).send(doc);
-            }
-        })
-    })
+    }
+
+    console.log(query)
+
+    const docs = await collection.find(query, query_options).toArray() 
+    
+    res.status(status_codes.SUCCESS).send({count: docs.length, docs: docs});
+    client.close();
+})
+
+// Get specific business document
+router.get('/b/:businessId', async function(req, res) {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db('dev_test');
+    const collection = db.collection("business");
+
+    // Excluding fields
+    const query_options = {
+        projection: {
+            password: 0,
+            created: 0,
+        }
+    }
+
+    const doc = await collection.findOne({ _id: ObjectId(req.params.businessId) }, query_options);
+    
+    if(doc) res.status(status_codes.SUCCESS).send(doc)
+    else    res.status(status_codes.ERROR).send(error)
+
+    client.close();
 })
 
 module.exports = router;
