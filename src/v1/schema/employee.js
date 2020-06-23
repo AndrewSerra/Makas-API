@@ -12,8 +12,13 @@ module.exports = {
             bsonType: "string",
             description: "This is a string for businessID and it is required."
         },
-        calendar:{
-            // TO DO
+        appointments: {
+            bsonType: "array",
+            uniqueItems: true,
+            items: {
+                bsonType: "objectId",
+                description: "The appointment docs in an array as objectIds."
+            }
         },
         description:{
             bsonType: "string",
@@ -35,13 +40,30 @@ module.exports = {
             bsonType: "array",
             uniqueItems: true,
             items: {
-                bsonType: "string",
+                bsonType: "objectId",
                 description: "This array has a collection of serviceIDs"
             }
         },
         shift:{
-            // TO DO
-            // Hours worked for days in a week
+            uniqueItems: true,
+            items: {
+                bsonType: "object",
+                required: ["day", "start", "end"],
+                properties: {
+                    day: {
+                        enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                        description: "Days of the week" 
+                    },
+                    start: {
+                        bsonType: "int",
+                        description: "Start time of the shift"
+                    },
+                    end: {
+                        bsonType: "int",
+                        description: "End time of the shift"
+                    }
+                }
+            }
         }
     }
 };
