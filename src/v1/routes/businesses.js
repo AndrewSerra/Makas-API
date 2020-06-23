@@ -153,8 +153,6 @@ router.get('/', async function(req, res, next) {
         }
     }
 
-    console.log(query)
-
     const docs = await collection.find(query, query_options).toArray() 
     
     res.status(status_codes.SUCCESS).send({count: docs.length, docs: docs});
@@ -181,7 +179,7 @@ router.get('/b/:businessId', async function(req, res) {
     collection.findOne({ _id: ObjectId(req.params.businessId) }, query_options)
     .then(response => {
         if(response) res.status(status_codes.SUCCESS).send(response)
-        else         res.status(status_codes.BAD_REQUEST).send("User ID does not exist.")
+        else         res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.")
     })
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close());
@@ -199,7 +197,7 @@ router.delete('/b/:businessId', async function(req, res) {
     collection.findOneAndDelete({ _id: ObjectId(req.params.businessId) })
     .then(response => {
         if(response.value) res.status(status_codes.SUCCESS).send(response)
-        else               res.status(status_codes.BAD_REQUEST).send("User ID does not exist.")
+        else               res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.")
     })
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close());
