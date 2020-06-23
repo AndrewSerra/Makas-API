@@ -173,12 +173,31 @@ router.get('/b/:businessId', async function(req, res) {
         }
     }
 
-    const doc = await collection.findOne({ _id: ObjectId(req.params.businessId) }, query_options);
-    
-    if(doc) res.status(status_codes.SUCCESS).send(doc)
-    else    res.status(status_codes.ERROR).send(error)
+    collection.findOne({ _id: ObjectId(req.params.businessId) }, query_options)
+    .then(response => {
+        if(response) res.status(status_codes.SUCCESS).send(response)
+        else         res.status(status_codes.BAD_REQUEST).send("User ID does not exist.")
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
+})
 
-    client.close();
+// Delete specific business document
+router.delete('/b/:businessId', async function(req, res) {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db('dev_test');
+    const collection = db.collection("business");
+
+    collection.findOneAndDelete({ _id: ObjectId(req.params.businessId) })
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response)
+        else               res.status(status_codes.BAD_REQUEST).send("User ID does not exist.")
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
 })
 
 module.exports = router;
