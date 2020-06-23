@@ -17,14 +17,18 @@ router = express.Router();
 // Create a business for the first time
 router.post('/', async function(req, res, next) {
 
+    const body = req.body;
     // Add the date and hashed password to the object
     // Correct the location property format
     const business = { 
-        ...req.body, 
+        ...body, 
         location: {
             type: "Point",
             coordinates: req.body.location,
         },
+        description: body.description || "",
+        image_paths: body.image_paths || [],
+        ratings: [],
         created: new Date() 
     }
     // Check the values sent
