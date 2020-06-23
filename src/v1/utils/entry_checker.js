@@ -80,7 +80,7 @@ function employee_entry_checker(employee) {
         
         // Value check for being null, undefined or empty string
         if(value === null || 
-            (value === "" && Object.keys(required_keys).includes(value)) || 
+            (value === "" && Object.keys(required_keys).includes(key)) || 
             value === undefined) {
 
             includes_undef = true;
