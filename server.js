@@ -1,5 +1,6 @@
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const compression = require('compression');
 const express = require('express');
 const dotenv = require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
@@ -11,11 +12,12 @@ const routerV1 = require('./src/v1/routes/main');
 
 const app = express();
 
+app.use(compression());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // It will connect to database dev_test
 // Later it will be changed to production when needed

@@ -29,7 +29,7 @@ router.post('/', async function(req, res, next) {
     }
     // Check the values sent
     const check_result = checkers.business_entry_checker(business);
-
+    
     // Hash the password entered
     bcrypt.genSalt(Number(process.env.SALT_ROUNDS), (err, salt) => {
         if(err)  throw error;
@@ -49,32 +49,30 @@ router.post('/', async function(req, res, next) {
 
         // Check if the business exists
         const query = {
-            name: business.name,
-            location: {
-                coordinates: business.location
-            },
+            "contact.email": business.contact.email,
         }
-        const doc = await collection.findOne(query);  // Only returns the id as doc object
-               
-        if(doc) {
+        // console.log(query.contact.email)
+        const doc_count = await collection.findOne(query);  // Only returns the id as doc object
+        console.log(doc_count)
+        if(doc_count) {
             res.status(status_codes.CONFLICT).send("Business already exists");
             client.close();
             next();
         }
-
-        // Insert the document to the database
-        collection.insertOne(business) 
-        .then(response => {
-            console.log(response)
-            // Success condition everything ok
-            if(response.result.ok || response !== null) {
-                res.sendStatus(status_codes.SUCCESS);
-            }
-        })
-        .catch(error => {
-            res.status(status_codes.ERROR).send(error);
-        }) 
-        .finally(_ => client.close());
+        else {
+            // Insert the document to the database
+            collection.insertOne(business) 
+            .then(response => {
+                // Success condition everything ok
+                if(response.result.ok || response !== null) {
+                    res.sendStatus(status_codes.SUCCESS);
+                }
+            })
+            .catch(error => {
+                res.status(status_codes.ERROR).send(error);
+            }) 
+            .finally(_ => client.close());
+        }
     }
     else {
         res.status(status_codes.BAD_REQUEST).send(check_result.response);

@@ -3,9 +3,8 @@
 module.exports = {
     poolSize: 10, 
     bufferMaxEntries: 0,
-    reconnectTries: 1000,
     connectTimeoutMS: 5000,
-    socketTimeoutMS: 300, 
+    socketTimeoutMS: 3000, 
     useNewUrlParser: true,
     useUnifiedTopology: true
 }
