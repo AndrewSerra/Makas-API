@@ -56,7 +56,49 @@ function business_entry_checker(business) {
     }
 }
 
+// Returns an object with the reason
+function employee_entry_checker(employee) {
+
+    let includes_undef = false;
+    let reason = null;
+
+    // If not type of object throw an error
+    if(!(employee instanceof Object)) {
+        throw new Error(`Employee object has invalid type: ${typeof(employee)}`);
+    }
+
+    let required_keys = {
+        name: 1,
+        business: 1,
+    }
+
+    for(let[key, value] of Object.entries(employee)) {
+        // Change the flags when a required key is encountered
+        if(Object.keys(required_keys).includes(key)) {
+            required_keys[key] = 0;
+        }
+        
+        // Value check for being null, undefined or empty string
+        if(value === null || 
+            (value === "" && Object.keys(required_keys).includes(value)) || 
+            value === undefined) {
+
+            includes_undef = true;
+            reason = reasons.CONTAINS_UNDEF;
+        }
+    }
+    // Check if the required values are met
+    let is_missing_fields = Object.values(required_keys).some(e => e === 1);
+    reason = is_missing_fields ? reasons.MISSING_REQUIRED_FIELD : reason;
+
+    return {
+        valid: (!includes_undef && !is_missing_fields),
+        reason: reason,
+    }
+}
+
 module.exports = {
     reasons,
-    business_entry_checker,    
+    business_entry_checker,
+    employee_entry_checker,    
 }
