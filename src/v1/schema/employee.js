@@ -2,29 +2,36 @@
 
 module.exports = {
     bsonType: "object",
-    required: ["name", "business"],
-    properties:{
-        name:{
+    required: [
+        "name", 
+        "business",
+        "appointments",
+        "rating",
+        "services",
+        "shifts"
+    ],
+    properties: {
+        name: {
             bsonType: "string",
             description: "This is a string and it is required."
         },
-        business:{
+        business: {
             bsonType: "string",
             description: "This is a string for businessID and it is required."
         },
-        appointments: {
-            bsonType: "array",
-            uniqueItems: true,
-            items: {
-                bsonType: "objectId",
-                description: "The appointment docs in an array as objectIds."
-            }
-        },
-        description:{
+        // appointments: {
+        //     bsonType: "array",
+        //     uniqueItems: true,
+        //     items: {
+        //         bsonType: "objectId",
+        //         description: "The pending appointment docs in an array as objectIds."
+        //     }
+        // },
+        description: {
             bsonType: "string",
             description: "This is a string for the description for the employee and it is not required."
         },
-        rating:{
+        rating: {
             bsonType: "array",
             uniqueItems: true,
             items: {
@@ -32,11 +39,11 @@ module.exports = {
                 description: "The rating of any service provided by the business from ratings model."
             }
         },
-        image_path:{
+        image_path: {
             bsonType: "string",
             description: "This is a string of image link and it is not required."
         },
-        services:{
+        services: {
             bsonType: "array",
             uniqueItems: true,
             items: {
@@ -44,7 +51,7 @@ module.exports = {
                 description: "This array has a collection of serviceIDs"
             }
         },
-        shift:{
+        shifts: {
             uniqueItems: true,
             items: {
                 bsonType: "object",
@@ -56,7 +63,8 @@ module.exports = {
                     },
                     start: {
                         bsonType: "int",
-                        description: "Start time of the shift"
+                        description: "Start time of the shift",
+
                     },
                     end: {
                         bsonType: "int",
