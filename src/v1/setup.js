@@ -1,14 +1,12 @@
 const MongoClient = require('mongodb').MongoClient;
 const options = require('./utils/dbConnectionOptions');
 const dotenv = require('dotenv').config();
+const collection_names = Object.values(require('./settings/collection_names'));
+
 
 // Check if collections in your database are already created
 // Create new collection if it does not appear
 async function check_setup(db_name) {
-    const collection_names = [
-        "user",
-        "business"
-    ]
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     const db = client.db(db_name);
