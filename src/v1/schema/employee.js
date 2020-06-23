@@ -16,17 +16,17 @@ module.exports = {
             description: "This is a string and it is required."
         },
         business: {
-            bsonType: "string",
+            bsonType: "objectId",
             description: "This is a string for businessID and it is required."
         },
-        // appointments: {
-        //     bsonType: "array",
-        //     uniqueItems: true,
-        //     items: {
-        //         bsonType: "objectId",
-        //         description: "The pending appointment docs in an array as objectIds."
-        //     }
-        // },
+        appointments: {
+            bsonType: "array",
+            uniqueItems: true,
+            items: {
+                bsonType: "objectId",
+                description: "The pending appointment docs in an array as objectIds."
+            }
+        },
         description: {
             bsonType: "string",
             description: "This is a string for the description for the employee and it is not required."
@@ -52,6 +52,7 @@ module.exports = {
             }
         },
         shifts: {
+            bsonType: "array",
             uniqueItems: true,
             items: {
                 bsonType: "object",

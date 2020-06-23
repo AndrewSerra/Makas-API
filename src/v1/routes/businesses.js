@@ -8,6 +8,7 @@ const dotenv = require('dotenv').config();
 const options = require('../utils/dbConnectionOptions');
 const check_type = require('../utils/type_checker');
 const { Double } = require('mongodb');
+const col_names = require('../settings/collection_names');
 
 router = express.Router();
 
@@ -26,8 +27,8 @@ router.post('/', async function(req, res, next) {
             type: "Point",
             coordinates: req.body.location,
         },
-        description: body.description || "",
-        image_paths: body.image_paths || [],
+        description: body.description ? body.description : "",
+        image_paths: [],
         ratings: [],
         created: new Date() 
     }
@@ -48,17 +49,17 @@ router.post('/', async function(req, res, next) {
         const client = await MongoClient.connect(process.env.MONGO_URI, options)
 
         // Connect to database, get collection
-        const db = client.db('dev_test');
-        const collection = db.collection("business");
+        const db = client.db(process.env.DB_NAME);
+        const collection = db.collection(col_names.BUSINESS);
 
         // Check if the business exists
         const query = {
             "contact.email": business.contact.email,
         }
-        // console.log(query.contact.email)
-        const doc_count = await collection.findOne(query);  // Only returns the id as doc object
-        console.log(doc_count)
-        if(doc_count) {
+        
+        const doc = await collection.findOne(query);  // Only returns the id as doc object
+        
+        if(doc) {
             res.status(status_codes.CONFLICT).send("Business already exists");
             client.close();
             next();
@@ -79,7 +80,7 @@ router.post('/', async function(req, res, next) {
         }
     }
     else {
-        res.status(status_codes.BAD_REQUEST).send(check_result.response);
+        res.status(status_codes.BAD_REQUEST).send(check_result.reason);
     }
 })
 
@@ -118,8 +119,8 @@ router.get('/', async function(req, res, next) {
         next();
     }
     // Connect to database, get collection
-    const db = client.db('dev_test');
-    const collection = db.collection("business");
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.BUSINESS);
 
     // Excluding fields
     const query_options = {
@@ -166,8 +167,8 @@ router.get('/b/:businessId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db('dev_test');
-    const collection = db.collection("business");
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.BUSINESS);
 
     // Excluding fields
     const query_options = {
@@ -192,8 +193,8 @@ router.delete('/b/:businessId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db('dev_test');
-    const collection = db.collection("business");
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.BUSINESS);
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.businessId) })
     .then(response => {
