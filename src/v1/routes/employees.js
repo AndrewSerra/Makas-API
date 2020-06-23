@@ -27,7 +27,7 @@ router.post('/', async function(req, res, next) {
     }
     
     const check_result = checkers.employee_entry_checker(employee);
-    console.log(check_result.valid)
+    
     // Only connects if the check is valid
     if(check_result.valid) {
         const client = await MongoClient.connect(process.env.MONGO_URI, options)
@@ -69,6 +69,50 @@ router.post('/', async function(req, res, next) {
     else {
         res.status(status_codes.BAD_REQUEST).send(check_result.reason);
     }
+})
+
+// Get specific business document
+router.get('/e/:employeeId', async function(req, res) {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.EMPLOYEE);
+
+    // Excluding fields
+    const query_options = {
+        projection: {
+            password: 0,
+            created: 0,
+        }
+    }
+
+    collection.findOne({ _id: ObjectId(req.params.employeeId) }, query_options)
+    .then(response => {
+        if(response) res.status(status_codes.SUCCESS).send(response);
+        else         res.status(status_codes.BAD_REQUEST).send("Employee ID does not exist.");
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
+})
+
+// Delete specific business document
+router.delete('/e/:employeeId', async function(req, res) {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.EMPLOYEE);
+
+    collection.findOneAndDelete({ _id: ObjectId(req.params.employeeId) })
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response);
+        else               res.status(status_codes.BAD_REQUEST).send("User ID does not exist.");
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
 })
 
 module.exports = router;
