@@ -11,12 +11,6 @@ const col_names = require('../settings/collection_names');
 
 router = express.Router();
 
-//
-//
-// TODO: TEST TEST TEST
-//
-//
-
 router.post('/', async function(req, res, next) {
 
     const body = req.body;
