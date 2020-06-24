@@ -160,7 +160,7 @@ router.get('/', async function(req, res, next) {
 })
 
 // Get specific business document
-router.get('/b/:businessId', async function(req, res) {
+router.get('/bid/:businessId', async function(req, res) {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
@@ -186,7 +186,7 @@ router.get('/b/:businessId', async function(req, res) {
 })
 
 // Delete specific business document
-router.delete('/b/:businessId', async function(req, res) {
+router.delete('/bid/:businessId', async function(req, res) {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 

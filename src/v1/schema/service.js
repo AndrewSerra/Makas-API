@@ -1,27 +1,34 @@
-const {service_categories, service_names} = require('../settings/service');
+const category_service_obj = require('../settings/service');
+
+// Format the name property enum
+let names_enum = [];
+for(let name_list of Object.values(category_service_obj)) {
+	names_enum.push(...name_list)
+}
 
 // This is the validator schema for the Service model
 module.exports = {
     bsonType: "object",
     required: [
         "name", 
+        "business",
         "price",
         "category"
     ],
     properties: {
+        name: {
+            enum: names_enum,
+            description: "This is a string and it is required.",
+        },
         business: {
             bsonType: "objectId",
-        },
-        name: {
-            enum: service_names,
-            description: "This is a string and it is required.",
         },
         price: {
             bsonType: "int",
             description: "This is a string and it is required.",
         },
         category: {
-            enum: service_categories,
+            enum: Object.keys(category_service_obj),
             description: "This is a string and it is required.",
         },
         description:{
