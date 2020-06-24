@@ -1,11 +1,19 @@
 // This is the validator schema for the Business model
 // It should be used as the $jsonSchema in validation
+
+
+/* pls add:
+-services that business can provide for customers
+-employees object,
+-working hours
+*/
+
 module.exports = {
     bsonType: "object",
     required: [
         "name", 
         "address", 
-        "geo_loc", 
+        "location", 
         "contact",
         "password",
         "created"
@@ -32,11 +40,14 @@ module.exports = {
                 }
             }
         },
-        geo_loc: {
+        location: {
             bsonType: "object",
             properties: {
-                lat: { bsonType: "double" },
-                lon: { bsonType: "double" }
+                type: { bsonType: "string" },
+                coordinates: { 
+                    bsonType: "array",
+                    items: { bsonType: "double" } 
+                }
             }
         },
         contact: {
@@ -50,11 +61,11 @@ module.exports = {
                 email: {
                     bsonType: "string",
                     description: "Cell phone number is checked by regex",
-                    pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
+                    // pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
                 }
             }
         },
-        description: { 
+        description: {
             bsonType: "string",
             description: "The description is a short explanation about the business, not required"
         },

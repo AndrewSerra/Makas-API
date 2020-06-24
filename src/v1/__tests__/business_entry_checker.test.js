@@ -9,9 +9,9 @@ describe('Test for business_entry_checker function', () => {
                 "city": "Izmir",
                 "country": "Estonia"
             },
-            "geo_loc": {
-                "lat": "38.436421",
-                "lon": "27.141974"
+            "location": {
+                "type": "Point",
+                "coordinates": ["38.436421", "27.141974"],
             },
             "contact": {
                 "email": "ecenaz@kuafor.com",
@@ -47,9 +47,9 @@ describe('Test for business_entry_checker function', () => {
                 "city": "Izmir",
                 "country": "Estonia"
             },
-            "geo_loc": {
-                "lat": "38.436421",
-                "lon": "27.141974"
+            "location": {
+                "type": "Point",
+                "coordinates": ["38.436421","27.141974"]
             },
             "contact": {
                 "email": "ecenaz@kuafor.com",
@@ -73,9 +73,9 @@ describe('Test for business_entry_checker function', () => {
                 "city": "Izmir",
                 "country": "Estonia"
             },
-            "geo_loc": {
-                "lat": "38.436421",
-                "lon": "27.141974"
+            "location": {
+                "type": "Point",
+                "coordinates": ["38.436421","27.141974"]
             },
             "contact": {
                 "email": "ecenaz@kuafor.com",
@@ -99,9 +99,9 @@ describe('Test for business_entry_checker function', () => {
                 "city": null,
                 "country": "Estonia"
             },
-            "geo_loc": {
-                "lat": "38.436421",
-                "lon": "27.141974"
+            "location": {
+                "type": "Point",
+                "coordinates": ["38.436421","27.141974"]
             },
             "contact": {
                 "email": "ecenaz@kuafor.com",
@@ -125,9 +125,9 @@ describe('Test for business_entry_checker function', () => {
                 "city": "Izmir",
                 "country": "Estonia"
             },
-            "geo_loc": {
-                "lat": "38.436421",
-                "lon": "27.141974"
+            "location": {
+                "type": "Point",
+                "coordinates": ["38.436421","27.141974"]
             },
             "contact": {
                 "email": undefined,
@@ -151,9 +151,9 @@ describe('Test for business_entry_checker function', () => {
                 "city": "Izmir",
                 "country": "Estonia"
             },
-            "geo_loc": {
-                "lat": "38.436421",
-                "lon": "27.141974"
+            "location": {
+                "type": "Point",
+                "coordinates": ["38.436421","27.141974"]
             },
             "contact": {
                 "email": "ecenaz@kuafor.com",
