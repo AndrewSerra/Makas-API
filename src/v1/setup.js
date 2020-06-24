@@ -16,7 +16,7 @@ async function check_setup(db_name) {
     
     // Iterate through the collection names
     // that are supposed to be created
-    for(name of collection_names) {
+    for(name of Object.values(collection_names)) {
         // If the name is not found as collection 
         // in the database create it.
         if(!db_collections.includes(name)) {
@@ -29,10 +29,14 @@ async function check_setup(db_name) {
                         $jsonSchema: schema
                     }
                 });
-
-                if(name === "business") {
-                    create_2d_sphere_index(db, 'business', 'location')
+                console.log(response);
+                if(name === collection_names.BUSINESS) {
+                    create_index(db, name, 'location',  '2dsphere')
                 }
+                // TODO: Read about the usage of indexes then maybe uncommect
+                // if(name === collection_names.SERVICE) {
+                //     create_index(db, name, 'business', 'id');
+                // }
             } catch (error) {
                 console.log("Check the names in the array collection_names, and the schema file names. They have to match.");
                 console.log(`Error: ${error.message}. Could not create collection for "${name}"`);
@@ -44,11 +48,11 @@ async function check_setup(db_name) {
     client.close();
 }
 
-function create_2d_sphere_index(db, collection_name, field) {
+function create_index(db, collection_name, field, index_name) {
     // Get the collection
     const collection = db.collection(collection_name);
     // Create the index
-    collection.createIndex({ [field] : "2dsphere" }, function(err, result) {
+    collection.createIndex({ [field] : index_name }, function(err, result) {
         if(err) throw err;
         console.log(result, "index created.");
     });

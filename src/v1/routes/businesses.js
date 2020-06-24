@@ -185,6 +185,27 @@ router.get('/bid/:businessId', async function(req, res) {
     .finally(_ => client.close());
 })
 
+// Get all associated with a specific business document
+router.get('/bid/:businessId/services', async function(req, res) {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.SERVICE);
+
+    const query = { business: ObjectId(req.params.businessId) };
+    const query_options = { projection: { business: 0, } }
+
+    collection.find(query, query_options).toArray()
+    .then(response => {
+        if(response.length) res.status(status_codes.SUCCESS).send(response)
+        else                res.status(status_codes.BAD_REQUEST).send("Business ID does not appear in services.")
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
+})
+
 // Delete specific business document
 router.delete('/bid/:businessId', async function(req, res) {
 
