@@ -109,8 +109,13 @@ router.get('/', async function(req, res, next) {
     }
 
     // Correct location format 
-    let correct_format_loc = query_init.location.split(",");
-    correct_format_loc = correct_format_loc.map(loc => Double(loc));
+    let correct_format_loc;
+    let is_loc_given = true;
+    if(query_init.location) {
+        is_loc_given = false;
+        correct_format_loc = query_init.location.split(",");
+        correct_format_loc = correct_format_loc.map(loc => Double(loc));
+    }
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
@@ -153,6 +158,7 @@ router.get('/', async function(req, res, next) {
         }
     }
 
+    if(!is_loc_given) delete query['location']
     const docs = await collection.find(query, query_options).toArray() 
     
     res.status(status_codes.SUCCESS).send({count: docs.length, docs: docs});
