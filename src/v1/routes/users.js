@@ -1,310 +1,268 @@
 const express = require('express');
-router = express.Router();
-
+const dotenv = require('dotenv').config();
 const bcrypt = require('bcrypt');
-
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
-
 const status_codes = require('../utils/status_codes');
+const checkers = require('../utils/entry_checker');
+const options = require('../utils/dbConnectionOptions');
+const collection_names = require('../settings/collection_names');
+const { ObjectId } = require('mongodb');
 
-const schemaValidator = require('../schema/schema_validator');
-const userModel = require("../schema/user");
-schemaValidator.addSchema(userModel,'user');
+router = express.Router();
 
-// Register: POST Create User
-
-//create user
-router.post("/", schemaValidator.validateSchema('user'), (req,res) => {
-
-    // if the user does not have valid name or the request doesn't have required properties- via validateSchema
-
+// Register
+router.post("/", async (req, res) => {
     // Add created date
-    const user = { ...req.body, created: new Date()};
-
-    // hash the password entered
-    bcrypt.genSalt(Number(process.env.SALT_ROUNDS), (err, salt) => {
-        if(err)  throw error;
-        bcrypt.hash(req.body.password, salt, (err, hash) => {
-            if(err) throw err;
-            user.password = hash;
-        })
-    });
-
-
-    var query = {
-        contact:{
-            email: user.contact.email,
-            phone: user.contact.phone
-        }
+    const date = new Date();
+    const body = req.body;
+    const user = { 
+        name: body.name,
+        password: body.password,
+        contact: {
+            email: {
+                address: body.email || "",
+                verified: false,
+            },
+            phone: {
+                number: body.phone || "",
+                verified: false,
+            },
+        },
+        appointments: [],
+        favorites: [],
+        created: date,
+        last_login: date,
     };
 
-    MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-        if(err) {
-            res.status(status_codes.ERROR).send(error);
+    const check_result = checkers.user_entry_checker(user);
+
+    const query = {
+        $or: [
+            {"contact.email.address": user.contact.email.address},
+            {"contact.phone.number": user.contact.phone.number},
+        ]
+    };
+
+    if(check_result.valid) {
+        const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+        // Connect to database, get collection
+        const db = client.db(process.env.DB_NAME);
+        const collection = db.collection(collection_names.USER);
+
+        // hash the password entered
+        bcrypt.genSalt(Number(process.env.SALT_ROUNDS), (err, salt) => {
+            if(err)  throw error;
+            bcrypt.hash(req.body.password, salt, (err, hash) => {
+                if(err) throw err;
+                user.password = hash;
+            })
+        });
+
+        collection.countDocuments(query)
+        .then((count) => {
+            // If the user exists
+            if (count > 0){
+                //either email or phone should be new to create a new user
+                res.status(status_codes.CONFLICT).send("User already exists");
+            } 
+            else{
+                // If the user does not have valid email
+                // If the user does not have valid tel
+                collection.insertOne(user)
+                // .then(response)
+                .then(response => {
+                    // Success condition everything ok
+                    if(response.result.ok || response !== null) {
+                        res.sendStatus(status_codes.SUCCESS);
+                    }
+                })
+                .catch(error => {
+                    res.status(status_codes.ERROR).send(error);
+                }) 
+                .finally(_ => client.close());
+            }
+         });
+    }
+    else {
+        res.status(status_codes.BAD_REQUEST).send(check_result.reason);
+    }
+});
+
+// Authentication
+router.post('/login', async (req, res, next) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+    // Deconstruct the data from body
+    const { contact, password } = req.body;
+    
+    if(contact.trim() === "" || password.trim() === "" ||
+       contact === null       || password === null ||
+       contact === undefined  || password === undefined) {
+        res.status(status_codes.BAD_REQUEST).send('Values sent are not valid.');
+        next();
+    }
+
+    const query = {
+        $or: [
+            {"contact.email.address": contact},
+            {"contact.phone.number": contact},
+        ],
+    }
+    // To see if active user
+    const date = new Date();
+
+    collection.findOneAndUpdate(query, { $set: { last_login: date } })
+    .then(async (response) => {
+        if(response.value) {
+            const user = response.value;
+            bcrypt.compare(password, user.password, function(error, result) {
+                if(error) res.status(status_codes.ERROR).send(error);
+                // Check the result
+                if(result) {
+                    res.sendStatus(status_codes.SUCCESS);
+                }
+                else {
+                    res.status(status_codes.BAD_REQUEST).send("Password invalid");
+                }
+            })
+        }
+        else res.status(status_codes.BAD_REQUEST).send("User does not exist.");
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close())
+})
+
+// Get all user data for admin page
+router.get("/", async (req, res) => {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+    // Create a date object and go back two months back to check 
+    // whether a user is active on the platform
+    const date = new Date();
+    date.setMonth(date.getMonth() - 2);
+
+    collection.aggregate([
+        {
+            $facet: {
+                "users": [
+                    {
+                        $project: {
+                            _id: 0,
+                            name: "$name",
+                            date: "$created",
+                        }
+                    },
+                    { $count: "count" }
+                ],
+                "active_users": [
+                    { $match: {  "last_login": { $gte: date } } },
+                    { $count: "count" }
+                ]
+            }
+        }
+    ]).toArray()
+    .then(response => {
+        if(response) res.status(status_codes.SUCCESS).send(response)
+        else         res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.")
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
+});
+
+// Get specific user
+router.get("/uid/:userId", async (req, res) => {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+
+    const query_options = {
+        projection: {
+            password: 0,
+            created: 0,
+            last_login: 0,
+        }
+    }
+
+    collection.findOne({ _id: ObjectId(req.params.userId) }, query_options)
+    .then(response => {
+        if(response) res.status(status_codes.SUCCESS).send(response);
+        else         res.status(status_codes.BAD_REQUEST).send("User ID does not exist.");
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
+});
+
+// Delete user account
+router.delete("/uid/:userId", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+
+    if(req.params.userId === undefined || req.params.userId === null || req.params.userId === "") {
+        res.status(status_codes.BAD_REQUEST).send("User ID not sent.");
+        next();
+    }
+    
+    collection.findOneAndDelete({ _id: ObjectId(req.params.userId) })
+    .then(response => {
+        if(response.value) {
+            res.status(status_codes.SUCCESS).send(response);
             next();
         }
-
-        // if the user exists
-        client.db('dev_test').collection('user').countDocuments(query)
-            .then((count) => {
-               if (count > 0){
-                   //either email or phone should be new to create a new user
-                   res.status(status_codes.CONFLICT).send("User already exists");
-               } else{
-
-                   // if the user does not have valid email
-                   // if the user does not have valid tel
-
-                   client.db('dev_test').collection('user').insertOne(user, function (insertError, response) {
-                       if (insertError){
-                           res.status(status_codes.ERROR).send(insertError)
-                       }
-                       if (response.result.ok || response !== null){
-                           res.sendStatus(status_codes.SUCCESS);
-                       }
-                       client.close();
-                   });
-
-               }
-            });
-        // password check will happen in the front end
-
-    });
-
+        else res.status(status_codes.BAD_REQUEST).send("User ID does not exist.");
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
 });
 
-// Log in: GET user and authenticate
+// Add business to favorites
+router.put("/uid/:userId/favorites/add/:businessId", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
 
-//get users || user
-//request with body will find users that suits the data in body
-// request without body will find all users
-router.get("/", (req,res) => {
-    MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-        if(err) throw err;
-        if (req.body._id === undefined){ //if the request is not done with id
-            client.db('dev_test').collection('user').find().toArray(function(err, items) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    res.send(items).status(201).end();
-                }
-                client.close();
-
-            });
-        }else{ // if the request is done with id
-            let x = ObjectID(req.body._id); // if get by id
-            client.db('dev_test').collection('user').find({_id : x}).toArray(function(err, items) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    res.send(items).status(201).end();
-                }
-                client.close();
-            });
-        }
-
-    });
-});
-
-// Change user information: UPDATE user router.put
-router.put("/", (req,res) =>{
-    //only works if id is provided
-    if (req.body._id === undefined){
-        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
-    }else{
-        let x = ObjectID(req.body._id);
-
-        var myQuery = { _id: x};
-        var newValues = {
-            $set: {
-                _id: x,
-                name: req.body.name,
-                contact: req.body.contact,
-                password: req.body.password
-            }
-        };
-        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-            if(err) throw err;
-            client.db('dev_test').collection('user').updateOne(myQuery, newValues, function (err, response) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    if (response.result.ok || response !== null){
-                        res.sendStatus(status_codes.SUCCESS);
-                    }
-                }
-                client.close();
-            });
-        });
+    const query = { 
+        _id: ObjectId(req.params.userId), 
+        favorites: { $nin: [ObjectId(req.params.businessId)] }
     }
-});
-
-// Deleting the account: DELETE user router delete
-
-router.delete("/", (req,res) => {
-    if (req.body._id === undefined){
-        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
-    }else{
-        let x = ObjectID(req.body._id);
-
-        var myQuery = { _id: x};
-
-        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-            if(err) throw err;
-            client.db('dev_test').collection('user').deleteOne(myQuery, function (err, response) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    if (response.result.ok || response !== null){
-                        res.sendStatus(status_codes.SUCCESS);
-                    }
-                }
-                client.close();
-            });
-        });
-    }
-});
-
-
-
-// Add business to favorites: POST businessID to user.favorites
-router.put("/favorites", (req,res) =>{
-    //only works if id is provided
-    if (req.body._id === undefined){
-        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
-    }else{
-        let x = ObjectID(req.body._id);
-
-        var myQuery = { _id: x};
-        var newValues = {
-            $push: {
-
-                favorites: req.body.favorites
-            }
-        };
-        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-            if(err) throw err;
-            client.db('dev_test').collection('user').updateOne(myQuery, newValues,{multi: true},function (err, response) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    if (response.result.ok || response !== null){
-                        res.sendStatus(status_codes.SUCCESS);
-                    }
-                }
-                client.close();
-            });
-        });
-    }
+    const update = { $push: { favorites: ObjectId(req.params.businessId) } }
+    collection.findOneAndUpdate(query, update)
+    .then(response => res.status(status_codes.SUCCESS).send(response))
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close())
 });
 
 // Remove business from favorites: DELETE businessID from user.favorites
-router.delete("/favorites", (req,res) =>{
-    //only works if id is provided
-    if (req.body._id === undefined){
-        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
-    }else{
-        let x = ObjectID(req.body._id);
+router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
 
-        var myQuery = { _id: x};
-        var newValues = {
-            $pull: {
-
-                favorites: req.body.favorites
-            }
-        };
-        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-            if(err) throw err;
-            client.db('dev_test').collection('user').updateOne(myQuery, newValues,function (err, response) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    if (response.result.ok || response !== null){
-                        res.sendStatus(status_codes.SUCCESS);
-                    }
-                }
-                client.close();
-            });
-        });
+    const query = { 
+        _id: ObjectId(req.params.userId), 
+        favorites: { $eq: ObjectId(req.params.businessId) }
     }
+    const update = { $pull: { favorites: ObjectId(req.params.businessId) } }
+    collection.findOneAndUpdate(query, update)
+    .then(response => res.status(status_codes.SUCCESS).send(response))
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close())
 });
 
 // TODO:
 // Apply for appointment: POST appointment
-router.put("/appointments", (req,res) =>{
-    //only works if id is provided
-    if (req.body._id === undefined){
-        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
-    }else{
-        let x = ObjectID(req.body._id);
-
-        var myQuery = { _id: x};
-        var newValues = {
-            $push: {
-                appointments: {
-                    future_appointments: {
-                        pending:req.body.appointments
-                    }
-                }
-
-            }
-        };
-        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-            if(err) throw err;
-            client.db('dev_test').collection('user').updateOne(myQuery, newValues,{multi: true},function (err, response) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    if (response.result.ok || response !== null){
-                        res.sendStatus(status_codes.SUCCESS);
-                    }
-                }
-                client.close();
-            });
-        });
-    }
-});
-
 // Cancel appointment: DELETE appointment
-router.delete("/appointments", (req,res) =>{
-    //only works if id is provided
-    if (req.body._id === undefined){
-        res.status(status_codes.BAD_REQUEST).send("BAD REQUEST: No ID supplied");
-    }else{
-        let x = ObjectID(req.body._id);
-
-        var myQuery = { _id: x};
-        var newValues = {
-            $pull: {
-
-                favorites: req.body.favorites
-            }
-        };
-        MongoClient.connect(process.env.MONGO_URI, function (err, client)  {
-            if(err) throw err;
-            client.db('dev_test').collection('user').updateOne(myQuery, newValues,function (err, response) {
-                if (err){
-                    res.status(status_codes.ERROR).send(err);
-                }else{
-                    if (response.result.ok || response !== null){
-                        res.sendStatus(status_codes.SUCCESS);
-                    }
-                }
-                client.close();
-            });
-        });
-    }
-});
-
-
 // See appointments for future: GET appointments
 // See appointments for past: GET appointments
-
-
-
-
-
-
 
 module.exports = router;
