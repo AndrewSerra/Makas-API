@@ -9,6 +9,7 @@ const options = require('../utils/dbConnectionOptions');
 const check_type = require('../utils/type_checker');
 const { Double } = require('mongodb');
 const col_names = require('../settings/collection_names');
+const collection_names = require('../settings/collection_names');
 
 router = express.Router();
 
@@ -174,15 +175,30 @@ router.get('/bid/:businessId', async function(req, res) {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(col_names.BUSINESS);
 
-    // Excluding fields
-    const query_options = {
-        projection: {
-            password: 0,
-            created: 0,
-        }
-    }
-
-    collection.findOne({ _id: ObjectId(req.params.businessId) }, query_options)
+    collection.aggregate([
+       { $match: { _id: ObjectId(req.params.businessId) } },
+       {
+            $lookup: {
+                    from: collection_names.SERVICE,
+                    localField: "_id",
+                    foreignField: "business",
+                    as: "services"
+            }
+        },
+        { 
+           $project: {
+                name: "$name",
+                address: "$address",
+                location: "$location.coordinates",
+                contact: "$contact",
+                description: "$description",
+                image_paths: "$image_paths",
+                rating_avg: {
+                    $avg: "$services.rating"
+                }
+           }
+        },
+    ]).toArray()
     .then(response => {
         if(response) res.status(status_codes.SUCCESS).send(response)
         else         res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.")
@@ -203,13 +219,25 @@ router.get('/bid/:businessId/services', async function(req, res) {
     const query = { business: ObjectId(req.params.businessId) };
     const query_options = { projection: { business: 0, } }
 
-    collection.find(query, query_options).toArray()
-    .then(response => {
-        if(response.length) res.status(status_codes.SUCCESS).send(response)
-        else                res.status(status_codes.BAD_REQUEST).send("Business ID does not appear in services.")
-    })
+    // collection.find(query, query_options).toArray()
+    // .then(response => {
+    //     if(response.length) res.status(status_codes.SUCCESS).send(response)
+    //     else                res.status(status_codes.BAD_REQUEST).send("Business ID does not appear in services.")
+    // })
+    // .catch(error => res.status(status_codes.ERROR).send(error))
+    // .finally(_ => client.close());
+    collection.aggregate([
+        { $match: { business: ObjectId(req.params.businessId) } },
+        {
+            $group: {
+                _id: "$category",
+                services: { $push:  { name: "$name", price: "$price" } }
+            }
+        },
+    ]).toArray()
+    .then(result => res.status(status_codes.SUCCESS).send(result))
     .catch(error => res.status(status_codes.ERROR).send(error))
-    .finally(_ => client.close());
+    .finally(_ => client.close())
 })
 
 // Delete specific business document
@@ -223,8 +251,11 @@ router.delete('/bid/:businessId', async function(req, res) {
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.businessId) })
     .then(response => {
-        if(response.value) res.status(status_codes.SUCCESS).send(response)
-        else               res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.")
+        if(response.value) {
+            res.status(status_codes.SUCCESS).send(response);
+            next();
+        }
+        else res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.");
     })
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close());
