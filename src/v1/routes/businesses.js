@@ -8,7 +8,6 @@ const dotenv = require('dotenv').config();
 const options = require('../utils/dbConnectionOptions');
 const check_type = require('../utils/type_checker');
 const { Double } = require('mongodb');
-const col_names = require('../settings/collection_names');
 const collection_names = require('../settings/collection_names');
 
 router = express.Router();
@@ -51,7 +50,7 @@ router.post('/', async function(req, res, next) {
 
         // Connect to database, get collection
         const db = client.db(process.env.DB_NAME);
-        const collection = db.collection(col_names.BUSINESS);
+        const collection = db.collection(collection_names.BUSINESS);
 
         // Check if the business exists
         const query = {
@@ -126,7 +125,7 @@ router.get('/', async function(req, res, next) {
     }
     // Connect to database, get collection
     const db = client.db(process.env.DB_NAME);
-    const collection = db.collection(col_names.BUSINESS);
+    const collection = db.collection(collection_names.BUSINESS);
 
     // Excluding fields
     const query_options = {
@@ -173,7 +172,7 @@ router.get('/bid/:businessId', async function(req, res) {
 
     // Connect to database, get collection
     const db = client.db(process.env.DB_NAME);
-    const collection = db.collection(col_names.BUSINESS);
+    const collection = db.collection(collection_names.BUSINESS);
 
     collection.aggregate([
        { $match: { _id: ObjectId(req.params.businessId) } },
@@ -214,7 +213,7 @@ router.get('/bid/:businessId/services', async function(req, res) {
 
     // Connect to database, get collection
     const db = client.db(process.env.DB_NAME);
-    const collection = db.collection(col_names.SERVICE);
+    const collection = db.collection(collection_names.SERVICE);
 
     const query = { business: ObjectId(req.params.businessId) };
     const query_options = { projection: { business: 0, } }
@@ -247,7 +246,7 @@ router.delete('/bid/:businessId', async function(req, res) {
 
     // Connect to database, get collection
     const db = client.db(process.env.DB_NAME);
-    const collection = db.collection(col_names.BUSINESS);
+    const collection = db.collection(collection_names.BUSINESS);
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.businessId) })
     .then(response => {
