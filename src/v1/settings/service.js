@@ -30,7 +30,7 @@ const category_service_matches = {
         "Epilasyon"
     ],
     "Masaj": [
-        "Aromaterapi  Masaji",
+        "Aromaterapi Masaji",
         "Selulit Masaji",
     ]
 }
