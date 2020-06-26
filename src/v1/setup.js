@@ -23,20 +23,34 @@ async function check_setup(db_name) {
             // Get the schema with the name of missing collection
             try {
                 const schema = require(`./schema/${name}`);
-
-                const response = await db.createCollection(name, {
-                    validator: {
-                        $jsonSchema: schema
-                    }
-                });
+                let response;
+                if(name === collection_names.USER) {
+                    response = await db.createCollection(name, {
+                        validator: {
+                            $or: [
+                                { "contact.email.address": {$regex: /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/} },
+                                { "contact.phone.number": {$regex: /^(?:(\+\d+)(?: |-))?\(?(\d{3})\)?(?: |-)(\d{3})(?: |-)(\d{4})/} },
+                            ],
+                            $jsonSchema: schema
+                        }
+                    });
+                }
+                else {
+                    response = await db.createCollection(name, {
+                        validator: {
+                            $jsonSchema: schema
+                        }
+                    });
+                }
+                
                 console.log(response);
                 if(name === collection_names.BUSINESS) {
                     create_index(db, name, 'location',  '2dsphere')
                 }
-                // TODO: Read about the usage of indexes then maybe uncommect
-                // if(name === collection_names.SERVICE) {
-                //     create_index(db, name, 'business', 'id');
-                // }
+                if(name === collection_names.SERVICE) {
+                    create_index(db, name, 'business', 'id');
+                }
+
             } catch (error) {
                 console.log("Check the names in the array collection_names, and the schema file names. They have to match.");
                 console.log(`Error: ${error.message}. Could not create collection for "${name}"`);
