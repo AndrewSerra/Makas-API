@@ -2,41 +2,35 @@
 
 module.exports = {
     bsonType: "object",
-    required: ["name", "contact", "password", "appointments", "favorites"],
+    required: ["name", "password", "created", "last_login"],
     properties: {
         name:{
             bsonType: "string",
-            minLength: 5,
+            minLength: 3,
             description: "This is a string and it is required.",
         },
         contact:{
             bsonType: "object",
-            required: ["email", "phone"],
             properties:{
                 email:{
                     bsonType: "object",
-                    required: ["email_address", "verified"],
                     properties: {
-                        email_address:{
+                        address:{
                             bsonType: "string",
-                            description: "Email is checked by regex",
-                            pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
+                            description: "Email is checked by regex"
                         },
                         verified:{
                             bsonType: "bool",
                             description: "Boolean value: true if the email_address is owned by the user and it is verified else false",
-
                         }
                     }
                 },
                 phone:{
                     bsonType: "object",
-                    required: ["phone_number", "verified"],
                     properties: {
-                        phone_number:{
+                        number:{
                             bsonType: "string",
                             description: "Cell phone number is checked by regex",
-                            pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
                         },
                         verified:{
                             bsonType: "bool",
@@ -52,50 +46,26 @@ module.exports = {
             description: "user login password",
         },
         appointments:{
-            bsonType: "object",
-            required: ["past_appointments", "future_appointments"],
-            properties: {
-                past_appointments:{
-                    bsonType: "array",
-                    uniqueItems: true,
-                    items: {
-                        bsonType: "string",
-                        description: "This array has a collection of appointmentIDs that is in the appointment collection."
-                    }
-
-                },
-                future_appointments:{
-                    bsonType: "object",
-                    required: ["set", "pending"],
-                    properties:{
-                        set:{
-                            bsonType: "array",
-                            uniqueItems: true,
-                            items: {
-                                bsonType: "string",
-                                description: "This array has a collection of appointmentIDs that is in appointment collection which set for future and accepted by the business owner."
-                            }
-                        },
-                        pending:{
-                            bsonType: "array",
-                            uniqueItems: true,
-                            items: {
-                                bsonType: "string",
-                                description: "This array has a collection of appointmentIDs that is in appointment collection which set for future and pending a response from the business owner."
-                            }
-                        }
-                    }
-
-                }
+            bsonType: "array",
+            uniqueItems: true,
+            items: {
+                bsonType: "objectId",
+                description: "This array has a collection of appointmentIDs."
             }
         },
         favorites:{
             bsonType: "array",
             uniqueItems: true,
             items: {
-                bsonType: "string",
+                bsonType: "objectId",
                 description: "This array has a collection of businessIDs that is in businesses collection that was added as favorite business in the client side"
             }
+        },
+        created: {
+            bsonType: 'date',
+        },
+        last_login: {
+            bsonType: 'date'
         }
     }
 };
