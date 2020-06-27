@@ -36,7 +36,7 @@ module.exports = {
             description: "The description is a short explanation about the service, not required",
         },
         rating: {
-            bsonType: "int",
+            bsonType: "double",
             minimum: 0,
             maximum: 5,
         }
