@@ -138,8 +138,7 @@ router.get('/', async function(req, res, next) {
     }
     let query = {
         name: {
-            $regex: new RegExp(query_init.name ? query_init.name : ""),
-            $options: 'i'
+            $regex: new RegExp(query_init.name ? query_init.name : "", 'i')
         },
         // address: { 
         //     street: {
@@ -159,10 +158,39 @@ router.get('/', async function(req, res, next) {
     }
 
     if(!is_loc_given) delete query['location']
-    const docs = await collection.find(query, query_options).toArray() 
-    
-    res.status(status_codes.SUCCESS).send({count: docs.length, docs: docs});
-    client.close();
+    let re = new RegExp(query_init.name ? query_init.name : "", 'i') // 'i' for case insensitive
+    console.log(re)
+    collection.aggregate([
+        { $match: { name: re } },
+        {
+            $lookup: {
+                from: collection_names.SERVICE,
+                localField: "_id",
+                foreignField: "business",
+                as: "services"
+            }
+        },
+        { 
+            $project: {
+                 name: "$name",
+                 address: "$address",
+                 location: "$location.coordinates",
+                 contact: "$contact",
+                 description: "$description",
+                 image_paths: "$image_paths",
+                 services: '$services',
+                 rating_avg: {
+                     $avg: "$services.rating"
+                 }
+            }
+         },
+    ]).toArray()
+    .then(response => {
+        if(response) res.status(status_codes.SUCCESS).send(response)
+        else         res.status(status_codes.BAD_REQUEST).send("No result.")
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
 })
 
 // Get specific business document
@@ -218,13 +246,6 @@ router.get('/bid/:businessId/services', async function(req, res) {
     const query = { business: ObjectId(req.params.businessId) };
     const query_options = { projection: { business: 0, } }
 
-    // collection.find(query, query_options).toArray()
-    // .then(response => {
-    //     if(response.length) res.status(status_codes.SUCCESS).send(response)
-    //     else                res.status(status_codes.BAD_REQUEST).send("Business ID does not appear in services.")
-    // })
-    // .catch(error => res.status(status_codes.ERROR).send(error))
-    // .finally(_ => client.close());
     collection.aggregate([
         { $match: { business: ObjectId(req.params.businessId) } },
         {
