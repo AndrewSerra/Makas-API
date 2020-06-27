@@ -3,4 +3,5 @@ module.exports = {
     BUSINESS: "business",
     EMPLOYEE: "employee",
     SERVICE: "service",
+    APPOINTMENT: "appointment",
 }
