@@ -2,12 +2,11 @@ const express = require('express');
 const dotenv = require('dotenv').config();
 const bcrypt = require('bcrypt');
 const MongoClient = require('mongodb').MongoClient;
-const ObjectID = require('mongodb').ObjectID;
+const ObjectId = require('mongodb').ObjectID;
 const status_codes = require('../utils/status_codes');
 const checkers = require('../utils/entry_checker');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
-const { ObjectId } = require('mongodb');
 
 router = express.Router();
 
@@ -71,7 +70,6 @@ router.post("/", async (req, res) => {
                 // If the user does not have valid email
                 // If the user does not have valid tel
                 collection.insertOne(user)
-                // .then(response)
                 .then(response => {
                     // Success condition everything ok
                     if(response.result.ok || response !== null) {
@@ -225,7 +223,7 @@ router.delete("/uid/:userId", async (req, res) => {
     .finally(_ => client.close());
 });
 
-// Add business to favorites
+// Add business to favorites: Add businessID from user.favorites
 router.put("/uid/:userId/favorites/add/:businessId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     const db = client.db(process.env.DB_NAME);
@@ -242,7 +240,7 @@ router.put("/uid/:userId/favorites/add/:businessId", async (req, res) => {
     .finally(_ => client.close())
 });
 
-// Remove business from favorites: DELETE businessID from user.favorites
+// Remove business from favorites: Remove businessID from user.favorites
 router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     const db = client.db(process.env.DB_NAME);
