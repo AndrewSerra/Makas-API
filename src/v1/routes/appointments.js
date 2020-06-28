@@ -97,4 +97,85 @@ router.post('/', async (req, res, next) => {
     }
 })
 
+router.get('/uid/:userId', async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.APPOINTMENT);
+
+    collection.aggregate([
+        { $match: { user: ObjectId(req.params.userId) } },
+        {
+            $project: {
+                user: "$user",
+                business: "$business",
+                services: "$services",
+                employees: "$employees",
+                time: "$time",
+                status: "$status"
+            }
+        },
+        {
+            $lookup: {
+                from: collection_names.SERVICE,
+                let: { services: "$services" },
+                pipeline: [
+                    { $match: { $expr: { $in: [ "$_id", "$$services" ] } } },
+                    {
+                        $project: {
+                            _id: 0,
+                            name: 1,
+                            price: 1,
+                            category: 1,
+                            duration: 1,
+                        }
+                    }
+                ],
+                as: "services"
+            }
+        },
+        {
+            $lookup: {
+                from: collection_names.EMPLOYEE,
+                let: { employees: "$employees" },
+                pipeline: [
+                    { $match: { $expr: { $in: [ "$_id", "$$employees" ] } } },
+                    {
+                        $project: {
+                            _id: 0,
+                            name: 1,
+                            rating: 1,
+                        }
+                    }
+                ],
+                as: "employees"
+            }
+        },
+        {
+            $lookup: {
+                from: collection_names.BUSINESS,
+                let: { business_id: "$business" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$_id","$$business_id"] } } },
+                    {
+                        $project: {
+                            _id: 0,
+                            name: 1,
+                            address: 1,
+                            location: 1,
+                            contact: 1
+                        }
+                    }
+                ],
+                as: "business"
+            }
+        },
+    ]).toArray()
+    .then(response => {
+        if(response) res.status(status_codes.SUCCESS).send(response);
+        else         res.status(status_codes.BAD_REQUEST).send("User ID does not exist.");
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
+})
+
 module.exports = router;

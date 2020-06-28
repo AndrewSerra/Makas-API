@@ -257,10 +257,4 @@ router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
     .finally(_ => client.close())
 });
 
-// TODO:
-// Apply for appointment: POST appointment
-// Cancel appointment: DELETE appointment
-// See appointments for future: GET appointments
-// See appointments for past: GET appointments
-
 module.exports = router;
