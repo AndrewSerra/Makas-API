@@ -7,6 +7,7 @@ const checkers = require('../utils/entry_checker');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
+const { response } = require('express');
 
 const router = express.Router();
 const appointmentMaster = new AppointmentMaster();
@@ -40,6 +41,7 @@ router.post('/', async (req, res, next) => {
         const db = client.db(process.env.DB_NAME);
         const collection = db.collection(collection_names.APPOINTMENT);
 
+        //TODO: CONFLICT ISSUE CONTINUES - Time.date is the problem
         const query = {
             $or: [
                 {
@@ -51,8 +53,8 @@ router.post('/', async (req, res, next) => {
                             'time.start.minute': { $lte: appointment.time.end.minute },
                         },
                         {
-                            'time.end.hour':   { $gte: appointment.time.start.hour },
-                            'time.end.minute':   { $gte: appointment.time.start.minute }
+                            'time.end.hour': { $gte: appointment.time.start.hour },
+                            'time.end.minute': { $gte: appointment.time.start.minute }
                         }
                     ]
                 },
@@ -65,8 +67,8 @@ router.post('/', async (req, res, next) => {
                             'time.start.minute': { $lte: appointment.time.end.minute },
                         },
                         {
-                            'time.end.hour':   { $gte: appointment.time.start.hour },
-                            'time.end.minute':   { $gte: appointment.time.start.minute }
+                            'time.end.hour': { $gte: appointment.time.start.hour },
+                            'time.end.minute': { $gte: appointment.time.start.minute }
                         }
                     ]
                 }
@@ -176,6 +178,32 @@ router.get('/uid/:userId', async (req, res) => {
     })
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close());
+})
+
+router.put('/aid/:appointmentId/status/:newStatus', async (req, res, next) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.APPOINTMENT);
+    const appointmentId = req.params.appointmentId;
+    const newStatus = req.params.newStatus.toLowerCase();
+
+    if(!appointmentMaster.is_status_valid(newStatus)){
+        res
+        .status(status_codes.BAD_REQUEST)
+        .send(`Status update ${newStatus} is not valid, options are: ${appointmentMaster.status_types.join(',')}.`);
+        next();
+    }
+
+    collection.findOneAndUpdate({ _id: ObjectId(appointmentId)}, { $set: { status: newStatus } })
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response);
+        else               res.status(status_codes.BAD_REQUEST).send("Appointment ID does not exist.");
+    })
+    .catch(error => {
+        console.log('err: ', error)
+        res.status(status_codes.ERROR).send(error)
+    })
+    .finally(_ => client.close())
 })
 
 module.exports = router;

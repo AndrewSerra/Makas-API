@@ -3,9 +3,15 @@
  *
  * @constructor
  */
-function AppointmentMaster() {
-    this.MINUTES_IN_HOUR = 60;
-}
+function AppointmentMaster() {}
+
+AppointmentMaster.prototype.MINUTES_IN_HOUR = 60;
+AppointmentMaster.prototype.status_types = [
+    "pending",
+    "accepted",
+    "cancelled",
+    "complete"
+]
 
 AppointmentMaster.prototype.get_end_time = function(time) {
 
@@ -18,6 +24,10 @@ AppointmentMaster.prototype.get_end_time = function(time) {
     } 
     
     return endtime;
+}
+
+AppointmentMaster.prototype.is_status_valid = function(status) {
+    return this.status_types.includes(status);
 }
 
 module.exports = AppointmentMaster;

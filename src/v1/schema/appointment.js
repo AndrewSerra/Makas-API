@@ -86,6 +86,6 @@ module.exports = {
                 description: "This is a collection of serviceIDs and it is required.",
             }
         },
-        status:{ enum: ["Pending", "Accepted", "Cancelled", "Complete"], },
+        status:{ enum: ["pending", "accepted", "cancelled", "complete"], },
     }
 };
