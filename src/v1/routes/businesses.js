@@ -110,9 +110,7 @@ router.get('/', async function(req, res, next) {
 
     // Correct location format 
     let correct_format_loc;
-    let is_loc_given = true;
     if(query_init.location) {
-        is_loc_given = false;
         correct_format_loc = query_init.location.split(",");
         correct_format_loc = correct_format_loc.map(loc => Double(loc));
     }
@@ -127,39 +125,8 @@ router.get('/', async function(req, res, next) {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.BUSINESS);
 
-    // Excluding fields
-    const query_options = {
-        projection: {
-            password: 0,
-            created: 0,
-        },
-        limit: num_docs,
-        skip: offset,
-    }
-    let query = {
-        name: {
-            $regex: new RegExp(query_init.name ? query_init.name : "", 'i')
-        },
-        // address: { 
-        //     street: {
-        //         $regex: new RegExp(query_init.location_name ? query_init.location_name : ""),
-        //         $options: 'i'
-        //     }
-        // },
-        location: {
-            $nearSphere: {
-                $geometry: {
-                    type: "Point",
-                    coordinates: correct_format_loc,
-                },
-                $maxDistance: range * 1000  // 1000 meters
-            }
-        }
-    }
-
-    if(!is_loc_given) delete query['location']
     let re = new RegExp(query_init.name ? query_init.name : "", 'i') // 'i' for case insensitive
-    console.log(re)
+    
     collection.aggregate([
         { $match: { name: re } },
         {
