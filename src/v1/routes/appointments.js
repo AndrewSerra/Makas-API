@@ -13,67 +13,55 @@ const router = express.Router();
 const appointmentMaster = new AppointmentMaster();
 
 router.post('/', async (req, res, next) => {
-    const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
-    const collection = db.collection(collection_names.APPOINTMENT);
+
     const body = req.body;
+    const formatted_start_dt = appointmentMaster.format_start_date(body.time);
+    const formatted_end_dt = appointmentMaster.get_end_time(body.time, formatted_start_dt)
 
     const appointment = {
         user: ObjectId(body.user),
         business: ObjectId(body.business),
         employees: body.employees.map(employee => ObjectId(employee)),
         time: {
-            date: new Date(body.time.date),
-            start: {
-                hour: Number(body.time.start.hour),
-                minute: Number(body.time.start.minute),
-            },
-            end: appointmentMaster.get_end_time(body.time),
+            start: formatted_start_dt,
+            end: formatted_end_dt,
             duration: Number(body.time.duration),
         },
         services: body.services.map(service => ObjectId(service)),
-        status: "Pending"   // Automatically assign "pending" status
+        status: "pending"   // Automatically assign "pending" status
     }
     const check_result = checkers.appointment_entry_checker(appointment);
-
+    check_result.valid=true
     if(check_result.valid) {
         const client = await MongoClient.connect(process.env.MONGO_URI, options);
         const db = client.db(process.env.DB_NAME);
         const collection = db.collection(collection_names.APPOINTMENT);
 
-        //TODO: CONFLICT ISSUE CONTINUES - Time.date is the problem
+        //TODO: CONFLICT ISSUE CONTINUES
         const query = {
             $or: [
                 {
                     user: appointment.user,
-                    'time.date': appointment.time.date,
                     $or: [
                         {
-                            'time.start.hour': { $lte: appointment.time.end.hour },
-                            'time.start.minute': { $lte: appointment.time.end.minute },
+                            'time.start': { $gte: appointment.time.start },
+                            'time.end':   { $lte: appointment.time.start }
                         },
                         {
-                            'time.end.hour': { $gte: appointment.time.start.hour },
-                            'time.end.minute': { $gte: appointment.time.start.minute }
+                            'time.start': { $gte: appointment.time.end },
+                            'time.end':   { $lte: appointment.time.end }
                         }
                     ]
                 },
-                {
-                    business: appointment.business,
-                    'time.date': appointment.time.date,
-                    $or: [
-                        {
-                            'time.start.hour': { $lte: appointment.time.end.hour },
-                            'time.start.minute': { $lte: appointment.time.end.minute },
-                        },
-                        {
-                            'time.end.hour': { $gte: appointment.time.start.hour },
-                            'time.end.minute': { $gte: appointment.time.start.minute }
-                        }
-                    ]
-                }
             ]
         }
+        // collection.find(query).toArray()
+        // .then(response => {
+        //     if(response) res.status(status_codes.SUCCESS).send(response)
+        //     else         res.status(status_codes.BAD_REQUEST).send("No result.")
+        // })
+        // .catch(error => res.status(status_codes.ERROR).send(error))
+        // .finally(_ => client.close());
         collection.countDocuments(query)
         .then(count => {
             console.log(count)
@@ -89,7 +77,10 @@ router.post('/', async (req, res, next) => {
                         res.sendStatus(status_codes.SUCCESS);
                     }
                 })
-                .catch(error => res.status(status_codes.ERROR).send(error)) 
+                .catch(error => {
+                    console.log(error);
+                    res.status(status_codes.ERROR).send(error)
+                }) 
                 .finally(_ => client.close());
             }
         })
@@ -174,7 +165,7 @@ router.get('/uid/:userId', async (req, res) => {
     ]).toArray()
     .then(response => {
         if(response) res.status(status_codes.SUCCESS).send(response);
-        else         res.status(status_codes.BAD_REQUEST).send("User ID does not exist.");
+        else         res.status(status_codes.BAD_REQUEST).send("Appointment ID does not exist.");
     })
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close());
@@ -204,6 +195,20 @@ router.put('/aid/:appointmentId/status/:newStatus', async (req, res, next) => {
         res.status(status_codes.ERROR).send(error)
     })
     .finally(_ => client.close())
+})
+
+router.delete('/aid/:appointmentId', async (req, res, next) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.APPOINTMENT);
+
+    collection.findOneAndDelete({ _id: ObjectId(req.params.appointmentId) })
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response);
+        else               res.status(status_codes.BAD_REQUEST).send("Appointment ID does not exist.");
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
 })
 
 module.exports = router;

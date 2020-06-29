@@ -13,17 +13,26 @@ AppointmentMaster.prototype.status_types = [
     "complete"
 ]
 
-AppointmentMaster.prototype.get_end_time = function(time) {
-
+AppointmentMaster.prototype.format_start_date = function(time) {
     // Scream at the developer who does not chech what data he/she sends to the function
     if(!(time instanceof Object)) throw new Error(`Time parameter has to have type Object, function received parameter of type ${typeof(time)}`);
 
-    let endtime = {
-        hour: time.start.hour      + Math.round(time.duration / this.MINUTES_IN_HOUR),
-        minute: (time.start.minute + time.duration) % this.MINUTES_IN_HOUR,
-    } 
+    const date = new Date(time.date);
+    const minutes_to_add = (this.MINUTES_IN_HOUR * Number(time.start.hour)) + Number(time.start.minute)
+    date.setMinutes(date.getMinutes() + minutes_to_add);
+
+    return date;
+}
+
+AppointmentMaster.prototype.get_end_time = function(time, start_date) {
+
+    // Scream at the developer who does not chech what data he/she sends to the function
+    if(!(time instanceof Object)) throw new Error(`Time parameter has to have type Object, function received parameter of type ${typeof(time)}`);
     
-    return endtime;
+    const end_date = new Date(start_date);
+    end_date.setMinutes(end_date.getMinutes() + time.duration);
+    
+    return end_date;
 }
 
 AppointmentMaster.prototype.is_status_valid = function(status) {

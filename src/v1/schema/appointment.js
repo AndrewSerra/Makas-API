@@ -26,59 +26,15 @@ module.exports = {
         time: {
             bsonType: "object",
             properties: {
-                date: { bsonType: 'date' },
-                start: { 
-                    bsonType: "object",
-                    properties: {
-                        hour: { 
-                            bsonType: 'int',
-                            maximum: 23,
-                            minimum: 0
-                         },
-                        minute: { 
-                            bsonType: 'int',
-                            maximum: 59,
-                            minimum: 0
-                        }
-                    }
-                },
-                start: { 
-                    bsonType: "object",
-                    properties: {
-                        hour: { 
-                            bsonType: 'int',
-                            maximum: 23,
-                            minimum: 0
-                         },
-                        minute: { 
-                            bsonType: 'int',
-                            maximum: 59,
-                            minimum: 0
-                        }
-                    }
-                },
-                end: { 
-                    bsonType: "object",
-                    properties: {
-                        hour: { 
-                            bsonType: 'int',
-                            maximum: 23,
-                            minimum: 0
-                         },
-                        minute: { 
-                            bsonType: 'int',
-                            maximum: 59,
-                            minimum: 0
-                        }
-                    }
-                },
+                start: { bsonType: 'date' },
+                end: { bsonType: "date"},
                 duration: { 
                     bsonType: "int",
                     description: "Duration in minutes."
                 }
             }
         },
-        service:{
+        services:{
             bsonType: "array",
             uniqueItems: true,
             items: {
