@@ -7,7 +7,6 @@ const checkers = require('../utils/entry_checker');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
-const { response } = require('express');
 
 const router = express.Router();
 const appointmentMaster = new AppointmentMaster();
@@ -37,31 +36,25 @@ router.post('/', async (req, res, next) => {
         const db = client.db(process.env.DB_NAME);
         const collection = db.collection(collection_names.APPOINTMENT);
 
-        //TODO: CONFLICT ISSUE CONTINUES
         const query = {
             $or: [
                 {
                     user: appointment.user,
                     $or: [
-                        {
-                            'time.start': { $gte: appointment.time.start },
-                            'time.end':   { $lte: appointment.time.start }
-                        },
-                        {
-                            'time.start': { $gte: appointment.time.end },
-                            'time.end':   { $lte: appointment.time.end }
-                        }
+                        {'time.start': { $gte: appointment.time.start, $lte: appointment.time.end } },
+                        {'time.end':   { $gte: appointment.time.start, $lte: appointment.time.end } },
+                    ]
+                },
+                {
+                    business: appointment.business,
+                    $or: [
+                        {'time.start': { $gte: appointment.time.start, $lte: appointment.time.end } },
+                        {'time.end':   { $gte: appointment.time.start, $lte: appointment.time.end } },
                     ]
                 },
             ]
         }
-        // collection.find(query).toArray()
-        // .then(response => {
-        //     if(response) res.status(status_codes.SUCCESS).send(response)
-        //     else         res.status(status_codes.BAD_REQUEST).send("No result.")
-        // })
-        // .catch(error => res.status(status_codes.ERROR).send(error))
-        // .finally(_ => client.close());
+        
         collection.countDocuments(query)
         .then(count => {
             console.log(count)
