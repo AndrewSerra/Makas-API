@@ -12,9 +12,6 @@ const collection_names = require('../settings/collection_names');
 
 router = express.Router();
 
-// TODO:
-// 1- Write tests for endpoints for POST /
-
 // Create a business for the first time
 router.post('/', async function(req, res, next) {
 
@@ -84,7 +81,6 @@ router.post('/', async function(req, res, next) {
     }
 })
 
-// TODO: 
 // Get businesses with query parameters from the business search page 
 // Structure:
 // ?range=0.5&name=ekm&location=meksika+sokagi&date[day]=23&date[month]=01&date[year]=2020&time[hr]=10&time[min]=30&numDocs=10&offset=0
@@ -252,15 +248,12 @@ router.get('/bid/:businessId/services', async function(req, res) {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.SERVICE);
 
-    const query = { business: ObjectId(req.params.businessId) };
-    const query_options = { projection: { business: 0, } }
-
     collection.aggregate([
         { $match: { business: ObjectId(req.params.businessId) } },
         {
             $group: {
                 _id: "$category",
-                services: { $push:  { name: "$name", price: "$price" } }
+                services: { $push:  { name: "$name", price: "$price" } } // You can add more fields if necessary
             }
         },
     ]).toArray()
