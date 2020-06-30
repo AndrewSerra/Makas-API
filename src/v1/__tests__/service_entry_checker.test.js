@@ -8,7 +8,8 @@ describe('Test for service_entry_checker function', () => {
             price: 10,
             category: "Tirnak",
             description: "Garip isler toplulugu",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(true);
@@ -22,6 +23,7 @@ describe('Test for service_entry_checker function', () => {
             business: "5eee117771931b0b5646412a",
             price: 10,
             category: "Tirnak",
+            duration: 30,
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(true);
@@ -36,7 +38,8 @@ describe('Test for service_entry_checker function', () => {
             price: 10,
             category: "Tirnak",
             description: "Garip isler toplulugu",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(false);
@@ -51,7 +54,8 @@ describe('Test for service_entry_checker function', () => {
             price: 10,
             category: "Cilt Bakimi",
             description: "Garip isler toplulugu",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(false);
@@ -65,7 +69,8 @@ describe('Test for service_entry_checker function', () => {
             price: 10,
             category: "Tirnak",
             description: "Garip isler toplulugu",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(false);
@@ -80,7 +85,8 @@ describe('Test for service_entry_checker function', () => {
             price: 10,
             category: "Tirnak",
             description: "Garip isler toplulugu",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(false);
@@ -95,7 +101,8 @@ describe('Test for service_entry_checker function', () => {
             price: 10,
             category: "Tirnak",
             description: "",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(true);
@@ -110,7 +117,8 @@ describe('Test for service_entry_checker function', () => {
             price: 10,
             category: "Tirnak",
             description: "Garip isler toplulugu",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(false);
@@ -125,7 +133,8 @@ describe('Test for service_entry_checker function', () => {
             price: undefined,
             category: "Tirnak",
             description: "Garip isler toplulugu",
-            rating: 0,
+            duration: 30,
+            rating: 0
         }
 
         expect(checkers.service_entry_checker(obj).valid).toBe(false);

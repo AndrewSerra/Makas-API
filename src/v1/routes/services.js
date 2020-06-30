@@ -21,6 +21,7 @@ router.post('/', async function(req, res, next) {
         price: Number(body.price),
         category: body.category,
         description: body.description || "",
+        duration: body.duration,
         rating: 0,  // Default to 0
     }
     

@@ -1,18 +1,20 @@
 // This is the validator schema for the Appointments model
-
 module.exports = {
     bsonType: "object",
     required: [
         "user",
         "business",
-        "status"
+        "employees",
+        "time",
+        "services",
+        "status",
     ],
     properties: {
         user: {
             bsonType: "objectId",
             description: "This is a string for userID and it is required.",
         },
-        business: { bsonType:"objectId", },
+        business: { bsonType:"objectId" },
         employees: {
             bsonType: "array",
             uniqueItems: true,
@@ -21,11 +23,18 @@ module.exports = {
                 description: "This is a collection of employeeIDs and it is required.",
             }
         },
-        time:{
-            bsonType: "timestamp",
-            description: "This is a time object for the time interval recorded for reservation and it is required.",
+        time: {
+            bsonType: "object",
+            properties: {
+                start: { bsonType: 'date' },
+                end: { bsonType: "date"},
+                duration: { 
+                    bsonType: "int",
+                    description: "Duration in minutes."
+                }
+            }
         },
-        service:{
+        services:{
             bsonType: "array",
             uniqueItems: true,
             items: {
@@ -33,6 +42,6 @@ module.exports = {
                 description: "This is a collection of serviceIDs and it is required.",
             }
         },
-        status:{ enum: ["Pending", "Complete"], },
+        status:{ enum: ["pending", "accepted", "cancelled", "complete"], },
     }
 };
