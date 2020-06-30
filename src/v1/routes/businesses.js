@@ -173,12 +173,7 @@ router.get('/', async function(req, res, next) {
                         }
                     },
                     { $match: { $expr: { $eq: ['$services', '$service_ids'] } } },
-                    {
-                        $project: {
-                            service_ids: 0,
-                            services: 0,
-                        }
-                    }
+                    { $project: { service_ids: 0, } }
                 ],
                 as: "employees"
             }
