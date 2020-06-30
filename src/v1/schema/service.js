@@ -13,7 +13,8 @@ module.exports = {
         "name", 
         "business",
         "price",
-        "category"
+        "category",
+        "duration"
     ],
     properties: {
         name: {
@@ -34,6 +35,10 @@ module.exports = {
         description:{
             bsonType: "string",
             description: "The description is a short explanation about the service, not required",
+        },
+        duration: {
+            bsonType: "int",
+            description: "Duration in minutes"
         },
         rating: {
             bsonType: "double",

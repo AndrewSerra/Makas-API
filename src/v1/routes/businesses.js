@@ -110,9 +110,7 @@ router.get('/', async function(req, res, next) {
 
     // Correct location format 
     let correct_format_loc;
-    let is_loc_given = true;
     if(query_init.location) {
-        is_loc_given = false;
         correct_format_loc = query_init.location.split(",");
         correct_format_loc = correct_format_loc.map(loc => Double(loc));
     }
@@ -127,42 +125,39 @@ router.get('/', async function(req, res, next) {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.BUSINESS);
 
-    // Excluding fields
-    const query_options = {
-        projection: {
-            password: 0,
-            created: 0,
-        },
-        limit: num_docs,
-        skip: offset,
-    }
-    let query = {
-        name: {
-            $regex: new RegExp(query_init.name ? query_init.name : ""),
-            $options: 'i'
-        },
-        // address: { 
-        //     street: {
-        //         $regex: new RegExp(query_init.location_name ? query_init.location_name : ""),
-        //         $options: 'i'
-        //     }
-        // },
-        location: {
-            $nearSphere: {
-                $geometry: {
-                    type: "Point",
-                    coordinates: correct_format_loc,
-                },
-                $maxDistance: range * 1000  // 1000 meters
-            }
-        }
-    }
-
-    if(!is_loc_given) delete query['location']
-    const docs = await collection.find(query, query_options).toArray() 
+    let re = new RegExp(query_init.name ? query_init.name : "", 'i') // 'i' for case insensitive
     
-    res.status(status_codes.SUCCESS).send({count: docs.length, docs: docs});
-    client.close();
+    collection.aggregate([
+        { $match: { name: re } },
+        {
+            $lookup: {
+                from: collection_names.SERVICE,
+                localField: "_id",
+                foreignField: "business",
+                as: "services"
+            }
+        },
+        { 
+            $project: {
+                 name: "$name",
+                 address: "$address",
+                 location: "$location.coordinates",
+                 contact: "$contact",
+                 description: "$description",
+                 image_paths: "$image_paths",
+                 services: '$services',
+                 rating_avg: {
+                     $avg: "$services.rating"
+                 }
+            }
+         },
+    ]).toArray()
+    .then(response => {
+        if(response) res.status(status_codes.SUCCESS).send(response)
+        else         res.status(status_codes.BAD_REQUEST).send("No result.")
+    })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
 })
 
 // Get specific business document
@@ -218,13 +213,6 @@ router.get('/bid/:businessId/services', async function(req, res) {
     const query = { business: ObjectId(req.params.businessId) };
     const query_options = { projection: { business: 0, } }
 
-    // collection.find(query, query_options).toArray()
-    // .then(response => {
-    //     if(response.length) res.status(status_codes.SUCCESS).send(response)
-    //     else                res.status(status_codes.BAD_REQUEST).send("Business ID does not appear in services.")
-    // })
-    // .catch(error => res.status(status_codes.ERROR).send(error))
-    // .finally(_ => client.close());
     collection.aggregate([
         { $match: { business: ObjectId(req.params.businessId) } },
         {
