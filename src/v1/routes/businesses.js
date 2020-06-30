@@ -128,24 +128,71 @@ router.get('/', async function(req, res, next) {
     let re = new RegExp(query_init.name ? query_init.name : "", 'i') // 'i' for case insensitive
     
     collection.aggregate([
-        { $match: { name: re } },
+        {
+            $geoNear: {
+                near: { type: "Point", coordinates: correct_format_loc, },
+                key: 'location',
+                distanceField: 'location.dist',
+                maxDistance: range * 1000,  // 1000 meters
+                query: { name: re },
+                spherical: true,
+            }
+        },
         {
             $lookup: {
                 from: collection_names.SERVICE,
-                localField: "_id",
-                foreignField: "business",
+                let: { business: "$_id" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$business", "$$business"] } } },
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            price: 1,
+                            category: 1,
+                            duration: 1,
+                        }
+                    } 
+                ],
                 as: "services"
+            }
+        },
+        {
+            $lookup: {
+                from: collection_names.EMPLOYEE,
+                let: { services: '$services._id' },
+                pipeline: [
+                    {
+                        $project: {
+                            name: 1,
+                            description: 1,
+                            rating: 1,
+                            image_path: 1,
+                            services: 1,
+                            service_ids: { $setIntersection: ['$services', '$$services'] }
+                        }
+                    },
+                    { $match: { $expr: { $eq: ['$services', '$service_ids'] } } },
+                    {
+                        $project: {
+                            service_ids: 0,
+                            services: 0,
+                        }
+                    }
+                ],
+                as: "employees"
             }
         },
         { 
             $project: {
                  name: "$name",
                  address: "$address",
-                 location: "$location.coordinates",
+                 location: "$location",
                  contact: "$contact",
                  description: "$description",
                  image_paths: "$image_paths",
                  services: '$services',
+                 employees: '$employees',
                  rating_avg: {
                      $avg: "$services.rating"
                  }
@@ -156,7 +203,7 @@ router.get('/', async function(req, res, next) {
         if(response) res.status(status_codes.SUCCESS).send(response)
         else         res.status(status_codes.BAD_REQUEST).send("No result.")
     })
-    .catch(error => res.status(status_codes.ERROR).send(error))
+    .catch(error => {console.log(error);res.status(status_codes.ERROR).send(error)})
     .finally(_ => client.close());
 })
 
