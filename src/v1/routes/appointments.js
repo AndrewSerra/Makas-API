@@ -54,7 +54,7 @@ router.post('/', async (req, res, next) => {
                 },
             ]
         }
-        
+
         collection.countDocuments(query)
         .then(count => {
             console.log(count)
@@ -160,6 +160,29 @@ router.get('/uid/:userId', async (req, res) => {
         if(response) res.status(status_codes.SUCCESS).send(response);
         else         res.status(status_codes.BAD_REQUEST).send("Appointment ID does not exist.");
     })
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close());
+})
+
+// Has search params to be added, param is date 
+router.get('/bid/:businessId', async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.APPOINTMENT);
+    const date_str = `${req.query.date.year}-${req.query.date.month}-${req.query.date.day}`;
+    const time_start = { date: date_str, start: {hour:0, minute:0}};
+    const time_end = { date: date_str, start: {hour:23, minute:59}};
+    console.log(appointmentMaster.format_start_date(time_start), appointmentMaster.format_start_date(time_end))
+    collection.aggregate([
+        { 
+            $match: { 
+                business: ObjectId(req.params.businessId), 
+                'time.start': { $gte: appointmentMaster.format_start_date(time_start), $lte: appointmentMaster.format_start_date(time_end) }
+            } 
+        },
+        { $project: { _id:0, time: 1 } }
+    ]).toArray()
+    .then(response =>  res.status(status_codes.SUCCESS).send(response))
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close());
 })
