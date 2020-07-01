@@ -9,8 +9,10 @@ const options = require('../utils/dbConnectionOptions');
 const check_type = require('../utils/type_checker');
 const { Double } = require('mongodb');
 const collection_names = require('../settings/collection_names');
+const AppointmentMaster = require('../utils/appointment_master');
 
 router = express.Router();
+appointment_master = new AppointmentMaster();
 
 // Create a business for the first time
 router.post('/', async function(req, res, next) {
@@ -121,7 +123,18 @@ router.get('/', async function(req, res, next) {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.BUSINESS);
 
-    let re = new RegExp(query_init.name ? query_init.name : "", 'i') // 'i' for case insensitive
+    let re_name = new RegExp(query_init.name ? query_init.name : "", 'i')                   // 'i' for case insensitive
+    let re_addr = new RegExp(query_init.location_name ? query_init.location_name : "", 'i') 
+
+    // Create the time object from the data in the query
+    const query_date = query_init.date;
+    const query_time = query_init.time;
+    const time = {
+        date: `${query_date.year}-${query_date.month}-${query_date.day}`, 
+        start: { hour: Number(query_time.hr), minute: Number(query_time.min)}
+    }
+    // Adjust the time component of the date
+    const appointment_start_req = appointment_master.format_start_date(time);
     
     collection.aggregate([
         {
@@ -130,7 +143,7 @@ router.get('/', async function(req, res, next) {
                 key: 'location',
                 distanceField: 'location.dist',
                 maxDistance: range * 1000,  // 1000 meters
-                query: { name: re },
+                query: { name: re_name, 'address.street': re_addr },
                 spherical: true,
             }
         },
@@ -174,6 +187,24 @@ router.get('/', async function(req, res, next) {
                 as: "employees"
             }
         },
+        {
+            $lookup: {
+                from: collection_names.APPOINTMENT,
+                let: { business: "$_id" },
+                pipeline: [
+                    { 
+                        $match: { 
+                            $expr: { 
+                                $eq: ["$business", "$$business"] 
+                            },
+                            'time.end': { $not: { $lte: appointment_start_req } },
+                            'time.start': { $not: { $gte: appointment_start_req } },
+                        } 
+                    }
+                ],
+                as: "appointment_conflict"
+            }
+        },
         { 
             $project: {
                  name: "$name",
@@ -186,7 +217,8 @@ router.get('/', async function(req, res, next) {
                  employees: '$employees',
                  rating_avg: {
                      $avg: "$services.rating"
-                 }
+                 },
+                 appointment_conflict: { $size: "$appointment_conflict" }
             }
          },
     ]).toArray()
