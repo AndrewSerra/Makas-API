@@ -31,14 +31,6 @@ module.exports = {
             bsonType: "string",
             description: "This is a string for the description for the employee and it is not required."
         },
-        rating: {
-            bsonType: "array",
-            uniqueItems: true,
-            items: {
-                bsonType: "objectId",
-                description: "The rating of any service provided by the business from ratings model."
-            }
-        },
         image_path: {
             bsonType: "string",
             description: "This is a string of image link and it is not required."

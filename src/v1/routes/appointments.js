@@ -7,6 +7,7 @@ const checkers = require('../utils/entry_checker');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
+const { Double } = require('mongodb');
 
 const router = express.Router();
 const appointmentMaster = new AppointmentMaster();
@@ -57,7 +58,6 @@ router.post('/', async (req, res, next) => {
 
         collection.countDocuments(query)
         .then(count => {
-            console.log(count)
             if(count > 0) {
                 res.status(status_codes.CONFLICT).send("Appointment has a conflict.");
                 next();
@@ -165,6 +165,8 @@ router.get('/uid/:userId', async (req, res) => {
 })
 
 // Has search params to be added, param is date 
+// Format:
+// ?date[day]=&date[month]=&date[year]=
 router.get('/bid/:businessId', async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     const db = client.db(process.env.DB_NAME);
@@ -172,7 +174,7 @@ router.get('/bid/:businessId', async (req, res) => {
     const date_str = `${req.query.date.year}-${req.query.date.month}-${req.query.date.day}`;
     const time_start = { date: date_str, start: {hour:0, minute:0}};
     const time_end = { date: date_str, start: {hour:23, minute:59}};
-    console.log(appointmentMaster.format_start_date(time_start), appointmentMaster.format_start_date(time_end))
+
     collection.aggregate([
         { 
             $match: { 
@@ -213,7 +215,54 @@ router.put('/aid/:appointmentId/status/:newStatus', async (req, res, next) => {
     .finally(_ => client.close())
 })
 
-router.delete('/aid/:appointmentId', async (req, res, next) => {
+router.put('/aid/:appointmentId/rate', async (req, res, next) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection_appointment = db.collection(collection_names.APPOINTMENT);
+    const collection_rating = db.collection(collection_names.RATING);
+    const appointmentId = req.params.appointmentId;
+    const query_options = { project: { _id: 1, services: 1, business: 1 } }
+
+    // Find the appointment that is being rated
+    const appointment = await collection_appointment.findOne({ _id: ObjectId(appointmentId) }, query_options);
+    const num_docs = await collection_rating.countDocuments({ _id: ObjectId(appointmentId) });
+
+    if(!(req.body.rating instanceof Array)) {
+        res.status(status_codes.ERROR).send('Type of rate in body has to be an Array.');
+        client.close();
+        return next();
+    }
+
+    if(appointment.services.length !== req.body.rating.length) {
+        res.status(status_codes.BAD_REQUEST).send('Number of services do not match the number of ratings.');
+        client.close();
+        return next();
+    }
+
+    const rating = {
+        _id: ObjectId(appointmentId),
+        business: ObjectId(await appointment.business),
+        rating: req.body.rating.map(rating => Double(rating)),
+    }
+
+    if(num_docs === 0) {
+        collection_rating.insertOne(rating)
+        .then(response => {
+            // Success condition everything ok
+            if(response.result.ok || response !== null) {
+                res.sendStatus(status_codes.SUCCESS);
+            }
+        })
+        .catch(error => res.status(status_codes.ERROR).send(error)) 
+        .finally(_ => client.close());
+    }
+    else {
+        res.status(status_codes.BAD_REQUEST).send('Rating already completed.');
+        client.close();
+    }
+})
+
+router.delete('/aid/:appointmentId', async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.APPOINTMENT);

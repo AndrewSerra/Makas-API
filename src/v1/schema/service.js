@@ -40,10 +40,5 @@ module.exports = {
             bsonType: "int",
             description: "Duration in minutes"
         },
-        rating: {
-            bsonType: "double",
-            minimum: 0,
-            maximum: 5,
-        }
     }
 };

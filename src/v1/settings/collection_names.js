@@ -4,4 +4,5 @@ module.exports = {
     EMPLOYEE: "employee",
     SERVICE: "service",
     APPOINTMENT: "appointment",
+    RATING: "rating",
 }
