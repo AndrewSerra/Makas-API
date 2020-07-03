@@ -243,6 +243,7 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
         _id: ObjectId(appointmentId),
         business: ObjectId(await appointment.business),
         rating: req.body.rating.map(rating => Double(rating)),
+        services: appointment.services.map(service => ObjectId(service))
     }
 
     if(num_docs === 0) {
