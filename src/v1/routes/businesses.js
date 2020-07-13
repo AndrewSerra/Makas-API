@@ -332,6 +332,23 @@ router.get('/bid/:businessId/services', async function(req, res) {
     .finally(_ => client.close())
 })
 
+// Get all associated employees with a specific business document
+router.get('/bid/:businessId/employees', async function(req, res) {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.EMPLOYEE);
+
+    collection.aggregate([
+        { $match: { business: ObjectId(req.params.businessId) } },
+    ]).toArray()
+    .then(result => res.status(status_codes.SUCCESS).send(result))
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close())
+})
+
 // Delete specific business document
 router.delete('/bid/:businessId', async function(req, res) {
 
