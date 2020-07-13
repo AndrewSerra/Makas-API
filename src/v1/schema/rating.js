@@ -8,6 +8,14 @@ module.exports = {
     ],
     properties: {
         business: { bsonType: 'objectId' },
+        services:{
+            bsonType: "array",
+            uniqueItems: true,
+            items: {
+                bsonType: "objectId",
+                description: "This is a collection of serviceIDs and it is required.",
+            }
+        },
         rating: {
             bsonType: 'array',
             items: { 
