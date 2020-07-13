@@ -81,14 +81,6 @@ module.exports = {
             bsonType: "string",
             description: "business login password",
         },
-        ratings: {
-            bsonType: "array",
-            uniqueItems: true,
-            items: {
-                bsonType: "objectId",
-                description: "The rating of any service provided by the business from ratings model."
-            }
-        },
         gender: {
             enum: ["male", "female", "both"],
             description: "Choose which customer gender you work with.",

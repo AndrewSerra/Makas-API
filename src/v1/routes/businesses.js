@@ -10,6 +10,7 @@ const check_type = require('../utils/type_checker');
 const { Double } = require('mongodb');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
+const service_settings = require('../settings/service');
 
 router = express.Router();
 appointment_master = new AppointmentMaster();
@@ -95,13 +96,14 @@ router.get('/', async function(req, res, next) {
     const range = Number(query_init.range) ? Number(query_init.range) : 10;           // Defaults to 10km
     const offset = Number(query_init.offset) ? Number(query_init.offset) : 0;         // Defaults to offset of 0
     const num_docs =  Number(query_init.num_docs) ? Number(query_init.num_docs) : 10; // Defaults the limit to 10 docs
+    const category = Object.keys(service_settings).includes(query_init.category) ? [query_init.category] : Object.keys(service_settings); 
 
     // Clean the  query object
     for(let[key, value] of Object.entries(query_init)) {
         if(value === undefined) {
             delete query_init[key];
         }
-        else if(key === "offset" || key === "numDocs" || key == "range") {
+        else if(key === "offset" || key === "numDocs" || key === "range" || key === "category") {
             delete query_init[key];
         }
     }
@@ -199,10 +201,24 @@ router.get('/', async function(req, res, next) {
                             },
                             'time.end': { $not: { $lte: appointment_start_req } },
                             'time.start': { $not: { $gte: appointment_start_req } },
+                            status: { $not: { $eq: 'completed' } }
                         } 
                     }
                 ],
                 as: "appointment_conflict"
+            }
+        },
+        {
+            $lookup: {
+                from: collection_names.RATING,
+                let: { business: "$_id" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$business", "$$business"] }, } },
+                    { $unwind: '$rating' },
+                    { $group: { _id: null, rating: { $push: '$rating' } } },
+                    { $project: { _id: 0, average: { $avg: '$rating' }, count: { $size: '$rating' } } },
+                ],
+                as: "rating"
             }
         },
         { 
@@ -215,13 +231,24 @@ router.get('/', async function(req, res, next) {
                  image_paths: "$image_paths",
                  services: '$services',
                  employees: '$employees',
-                 rating_avg: {
-                     $avg: "$services.rating"
-                 },
+                 rating: { $arrayElemAt: ["$rating", 0] },
                  appointment_conflict: { $size: "$appointment_conflict" }
             }
-         },
+        },
     ]).toArray()
+    .then(businesses => {
+        let new_business_arr = businesses.map(business => {
+            let has_category = false;
+            for(let service of business.services) {
+                if(category.includes(service.category)) {
+                    has_category = true;
+                    break;
+                }
+            }
+            return has_category ? business : null;
+        })
+        return new_business_arr.filter(business => business !== null);
+    })
     .then(response => {
         if(response) res.status(status_codes.SUCCESS).send(response)
         else         res.status(status_codes.BAD_REQUEST).send("No result.")
@@ -249,6 +276,19 @@ router.get('/bid/:businessId', async function(req, res) {
                     as: "services"
             }
         },
+        {
+            $lookup: {
+                from: collection_names.RATING,
+                let: { business: "$_id" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$business", "$$business"] }, } },
+                    { $unwind: '$rating' },
+                    { $group: { _id: null, rating: { $push: '$rating' } } },
+                    { $project: { _id: 0, average: { $avg: '$rating' }, count: { $size: '$rating' } } },
+                ],
+                as: "rating"
+            }
+        },
         { 
            $project: {
                 name: "$name",
@@ -257,9 +297,7 @@ router.get('/bid/:businessId', async function(req, res) {
                 contact: "$contact",
                 description: "$description",
                 image_paths: "$image_paths",
-                rating_avg: {
-                    $avg: "$services.rating"
-                }
+                rating: { $arrayElemAt: ["$rating", 0] },
            }
         },
     ]).toArray()
@@ -288,6 +326,23 @@ router.get('/bid/:businessId/services', async function(req, res) {
                 services: { $push:  { name: "$name", price: "$price" } } // You can add more fields if necessary
             }
         },
+    ]).toArray()
+    .then(result => res.status(status_codes.SUCCESS).send(result))
+    .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close())
+})
+
+// Get all associated employees with a specific business document
+router.get('/bid/:businessId/employees', async function(req, res) {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.EMPLOYEE);
+
+    collection.aggregate([
+        { $match: { business: ObjectId(req.params.businessId) } },
     ]).toArray()
     .then(result => res.status(status_codes.SUCCESS).send(result))
     .catch(error => res.status(status_codes.ERROR).send(error))
