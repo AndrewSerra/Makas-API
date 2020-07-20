@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "nodemon server.js localhost 8080",
+    "tunnel": "ssh -L 4321:localhost:27018 root@142.93.98.210 -f -N mongo --port 4321",
     "test": "jest"
   },
   "author": "",

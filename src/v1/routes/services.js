@@ -8,6 +8,7 @@ const dotenv = require('dotenv').config();
 const options = require('../utils/dbConnectionOptions');
 const check_type = require('../utils/type_checker');
 const col_names = require('../settings/collection_names');
+const service = require('../settings/service');
 
 router = express.Router();
 
@@ -69,6 +70,13 @@ router.post('/', async function(req, res, next) {
     else {
         res.status(status_codes.BAD_REQUEST).send(check_result.reason);
     }
+})
+
+// Sends the service category and related services to the frontend
+// This is to have less changes in the system when we do updates
+// Only the backend file has to change to implement the change
+router.get('/', function(req, res) {
+    res.status(status_codes.SUCCESS).json(service);
 })
 
 // Get specific business document

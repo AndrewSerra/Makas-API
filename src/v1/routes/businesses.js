@@ -343,6 +343,14 @@ router.get('/bid/:businessId/employees', async function(req, res) {
 
     collection.aggregate([
         { $match: { business: ObjectId(req.params.businessId) } },
+        {
+            $lookup: {
+                    from: collection_names.SERVICE,
+                    localField: "_id",
+                    foreignField: "business",
+                    as: "services"
+            }
+        },
     ]).toArray()
     .then(result => res.status(status_codes.SUCCESS).send(result))
     .catch(error => res.status(status_codes.ERROR).send(error))
