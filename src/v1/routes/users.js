@@ -73,7 +73,7 @@ router.post("/", async (req, res) => {
                 .then(response => {
                     // Success condition everything ok
                     if(response.result.ok || response !== null) {
-                        res.sendStatus(status_codes.SUCCESS);
+                        res.status(status_codes.SUCCESS).send(response.insertedId);
                     }
                 })
                 .catch(error => {
@@ -121,7 +121,7 @@ router.post('/login', async (req, res, next) => {
                 if(error) res.status(status_codes.ERROR).send(error);
                 // Check the result
                 if(result) {
-                    res.sendStatus(status_codes.SUCCESS);
+                    res.status(status_codes.SUCCESS).send(response.value._id);
                 }
                 else {
                     res.status(status_codes.BAD_REQUEST).send("Password invalid");
