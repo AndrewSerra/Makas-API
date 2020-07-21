@@ -167,14 +167,14 @@ router.get('/uid/:userId', async (req, res) => {
 // Has search params to be added, param is date 
 // Format:
 // ?date[day]=&date[month]=&date[year]=
-router.get('/bid/:businessId', async (req, res) => {
+router.get('/bid/:businessId/search', async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.APPOINTMENT);
     const date_str = `${req.query.date.year}-${req.query.date.month}-${req.query.date.day}`;
     const time_start = { date: date_str, start: {hour:0, minute:0}};
     const time_end = { date: date_str, start: {hour:23, minute:59}};
-
+    
     collection.aggregate([
         { 
             $match: { 
@@ -182,7 +182,8 @@ router.get('/bid/:businessId', async (req, res) => {
                 'time.start': { $gte: appointmentMaster.format_start_date(time_start), $lte: appointmentMaster.format_start_date(time_end) }
             } 
         },
-        { $project: { _id:0, time: 1 } }
+        { $sort: { 'time.start': 1 } },
+        { $project: { _id:0, user: 0, business: 0 } }
     ]).toArray()
     .then(response =>  res.status(status_codes.SUCCESS).send(response))
     .catch(error => res.status(status_codes.ERROR).send(error))
