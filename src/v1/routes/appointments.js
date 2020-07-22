@@ -182,8 +182,26 @@ router.get('/bid/:businessId/search', async (req, res) => {
                 'time.start': { $gte: appointmentMaster.format_start_date(time_start), $lte: appointmentMaster.format_start_date(time_end) }
             } 
         },
+        {
+            $lookup: {
+                from: "user",
+                let: { userId: "$user" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$_id","$$userId"] } } },
+                    { $project: {  _id: 0, name: 1, contact: 1, } }
+                ],
+                as: "user"
+            }
+        },
         { $sort: { 'time.start': 1 } },
-        { $project: { _id:0, user: 0, business: 0 } }
+        { 
+            $project: {
+                employees: "$employees",
+                services: "$services",
+                time: "$time",
+                user: { $arrayElemAt: ["$user", 0] } 
+            } 
+        }
     ]).toArray()
     .then(response =>  res.status(status_codes.SUCCESS).send(response))
     .catch(error => res.status(status_codes.ERROR).send(error))
