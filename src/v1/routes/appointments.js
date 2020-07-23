@@ -199,6 +199,7 @@ router.get('/bid/:businessId/search', async (req, res) => {
                 employees: "$employees",
                 services: "$services",
                 time: "$time",
+                status: "$status",
                 user: { $arrayElemAt: ["$user", 0] } 
             } 
         }
