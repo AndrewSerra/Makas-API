@@ -45,14 +45,6 @@ module.exports = {
             bsonType: "string",
             description: "user login password",
         },
-        appointments:{
-            bsonType: "array",
-            uniqueItems: true,
-            items: {
-                bsonType: "objectId",
-                description: "This array has a collection of appointmentIDs."
-            }
-        },
         favorites:{
             bsonType: "array",
             uniqueItems: true,
