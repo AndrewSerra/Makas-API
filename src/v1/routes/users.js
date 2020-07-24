@@ -28,7 +28,6 @@ router.post("/", async (req, res) => {
                 verified: false,
             },
         },
-        appointments: [],
         favorites: [],
         created: date,
         last_login: date,
@@ -71,9 +70,13 @@ router.post("/", async (req, res) => {
                 // If the user does not have valid tel
                 collection.insertOne(user)
                 .then(response => {
+                    const revisedUser = response.ops[0];
+                    delete revisedUser.password;
+                    delete revisedUser.created;
+                    delete revisedUser.last_login;
                     // Success condition everything ok
                     if(response.result.ok || response !== null) {
-                        res.status(status_codes.SUCCESS).send(response.insertedId);
+                        res.status(status_codes.SUCCESS).send(revisedUser);
                     }
                 })
                 .catch(error => {
@@ -121,7 +124,11 @@ router.post('/login', async (req, res, next) => {
                 if(error) res.status(status_codes.ERROR).send(error);
                 // Check the result
                 if(result) {
-                    res.status(status_codes.SUCCESS).send(response.value._id);
+                    let revisedUser = response.value;
+                    delete revisedUser.password;
+                    delete revisedUser.created;
+                    delete revisedUser.last_login;
+                    res.status(status_codes.SUCCESS).send(revisedUser);
                 }
                 else {
                     res.status(status_codes.BAD_REQUEST).send("Password invalid");

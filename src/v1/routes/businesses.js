@@ -323,7 +323,7 @@ router.get('/bid/:businessId/services', async function(req, res) {
         {
             $group: {
                 _id: "$category",
-                services: { $push:  { name: "$name", price: "$price" } } // You can add more fields if necessary
+                services: { $push:  { name: "$name", price: "$price", id: "$_id", } } // You can add more fields if necessary
             }
         },
     ]).toArray()
