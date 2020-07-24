@@ -136,25 +136,25 @@ router.get('/uid/:userId', async (req, res) => {
                 as: "employees"
             }
         },
-        {
-            $lookup: {
-                from: collection_names.BUSINESS,
-                let: { business_id: "$business" },
-                pipeline: [
-                    { $match: { $expr: { $eq: ["$_id","$$business_id"] } } },
-                    {
-                        $project: {
-                            _id: 0,
-                            name: 1,
-                            address: 1,
-                            location: 1,
-                            contact: 1
-                        }
-                    }
-                ],
-                as: "business"
-            }
-        },
+        // {
+        //     $lookup: {
+        //         from: collection_names.BUSINESS,
+        //         let: { business_id: "$business" },
+        //         pipeline: [
+        //             { $match: { $expr: { $eq: ["$_id","$$business_id"] } } },
+        //             {
+        //                 $project: {
+        //                     _id: 0,
+        //                     name: 1,
+        //                     address: 1,
+        //                     location: 1,
+        //                     contact: 1
+        //                 }
+        //             }
+        //         ],
+        //         as: "business"
+        //     }
+        // },
     ]).toArray()
     .then(response => {
         if(response) res.status(status_codes.SUCCESS).send(response);
