@@ -8,20 +8,33 @@ const dotenv = require('dotenv').config();
 const options = require('../utils/dbConnectionOptions');
 const check_type = require('../utils/type_checker');
 const col_names = require('../settings/collection_names');
+const multer = require('multer')
+const shortid = require('shortid');
+const path = require('path');
+const fs = require('fs');
+const url = require('url');
 
 router = express.Router();
-
-router.post('/', async function(req, res, next) {
+const employeeStorage = multer.diskStorage({ 
+    destination: path.join(__dirname, '../../../uploads/employees/'),
+    filename: function (req, file, cb){
+        cb(null, `${shortid.generate() + path.parse(file.originalname).ext}`);
+    }
+});
+const upload = multer({
+    storage: employeeStorage,
+ });
+router.post('/', upload.single('imageFile'), async function(req, res, next) {
 
     const body = req.body;
-
+    
     let employee = {
         name: body.name,
         business: ObjectId(body.business_id),
         appointments: [],
         description: body.description || "",
         rating: [],
-        image_path: "",
+        image_path: `${req.protocol}://${req.hostname}:5000/${req.file.path.replace(path.join(__dirname, '../../../uploads'), 'v1/static')}`,
         services: [],
         shifts: []
     }
@@ -54,7 +67,7 @@ router.post('/', async function(req, res, next) {
             .then(response => {
                 // Success condition everything ok
                 if(response.result.ok || response !== null) {
-                    res.sendStatus(status_codes.SUCCESS);
+                    res.status(status_codes.SUCCESS).send(response.ops[0]);
                 }
                 else {
                     res.status(status_codes.BAD_REQUEST).send(response);
@@ -99,7 +112,15 @@ router.delete('/eid/:employeeId', async function(req, res) {
     const collection = db.collection(col_names.EMPLOYEE);
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.employeeId) })
-    .then(response => {
+    .then((response) => {
+        const urlParse = url.parse(response.value.image_path).pathname;
+        const filePath = path.resolve(__dirname, urlParse.replace('/v1/static', '../../../uploads'));
+        // Delete the image saved on the server for the employee        
+        fs.unlink(filePath, (err) => {
+            if (err) throw err;
+            console.log(`${filePath} was deleted`);
+        });
+        
         if(response.value) res.status(status_codes.SUCCESS).send(response);
         else               res.status(status_codes.BAD_REQUEST).send("User ID does not exist.");
     })
