@@ -15,6 +15,7 @@ module.exports = {
         "address", 
         "location", 
         "contact",
+        "opTime",
         "password",
         "created"
     ],
@@ -47,6 +48,25 @@ module.exports = {
                 coordinates: { 
                     bsonType: "array",
                     items: { bsonType: "double" } 
+                }
+            }
+        },
+        opTime: {
+            bsonType: "object",
+            properties: {
+                start: {
+                    bsonType: "object",
+                    properties: {
+                        hour: { bsonType: 'int' },
+                        min: { bsonType: 'int' }
+                    }
+                },
+                end: {
+                    bsonType: "object",
+                    properties: {
+                        hour: { bsonType: 'int' },
+                        min: { bsonType: 'int' }
+                    }
                 }
             }
         },
