@@ -102,6 +102,28 @@ router.get('/eid/:employeeId', async function(req, res) {
     .finally(_ => client.close());
 })
 
+router.put('/eid/:employeeId', async function(req, res) {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.EMPLOYEE);
+    const employeeId = ObjectId(req.body._id);
+    let employeeData = req.body;
+    delete employeeData._id;
+    console.log(req.body)
+    collection.findOneAndUpdate({_id: employeeId}, employeeData)
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response);
+        else               res.status(status_codes.BAD_REQUEST).send("Employee ID does not exist.");
+    })
+    .catch(error => {
+        console.log('err: ', error)
+        res.status(status_codes.ERROR).send(error)
+    })
+    .finally(_ => client.close())
+})
+
 // Delete specific business document
 router.delete('/eid/:employeeId', async function(req, res) {
 

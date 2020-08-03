@@ -55,13 +55,18 @@ module.exports = {
                         description: "Days of the week" 
                     },
                     start: {
-                        bsonType: "int",
-                        description: "Start time of the shift",
-
+                        bsonType: "object",
+                        properties: {
+                            hour: { bsonType: 'int' },
+                            min: { bsonType: 'int' }
+                        }
                     },
                     end: {
-                        bsonType: "int",
-                        description: "End time of the shift"
+                        bsonType: "object",
+                        properties: {
+                            hour: { bsonType: 'int' },
+                            min: { bsonType: 'int' }
+                        }
                     }
                 }
             }
