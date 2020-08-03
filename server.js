@@ -6,6 +6,7 @@ const dotenv = require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
 const check_setup = require('./src/v1/setup');
 const options = require('./src/v1/utils/dbConnectionOptions');
+const path = require('path');
 
 // Routers for versions of the API
 const routerV1 = require('./src/v1/routes/main');
@@ -25,6 +26,9 @@ const PORT = process.env.PORT || 3000;
 check_setup('dev_test');
 
 // Add the routes to the app
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname + '/index.html'));
+});
 app.use('/v1', routerV1);
 
 const server = app.listen(PORT, () => console.log(`Listening on port ${PORT}`)); 
