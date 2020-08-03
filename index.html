@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+        <head>
+            <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+            <style>
+                html, body {
+                    height: 100%;
+                    width: 100%;
+                    position: absolute;
+                    background-color: #bba28c1f;
+                    font-family: 'Roboto', sans-serif;
+                }
+                .cover {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    display: flex;
+                    flex-wrap: wrap;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .intro {
+                    background-color: white;
+                    box-shadow:
+                        0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+                        0 6.7px 5.3px rgba(0, 0, 0, 0.048),
+                        0 12.5px 10px rgba(0, 0, 0, 0.06),
+                        0 19.3px 17.9px rgba(0, 0, 0, 0.072);
+                    border-radius: 5px;
+                    position: relative;
+                }
+                .intro #content {
+                    padding: 20px;
+                    width: 80%;
+                    min-width: 450px;
+                    margin: auto;
+                }
+                .intro #slogan {
+                    font-weight: 500;
+                    font-size: 32px;
+                }
+                .intro p:not(#slogan) {
+                    font-weight: 300;
+                    font-size: 18px;
+                    padding-left: 15px;
+                    text-align: justify;
+                }
+                .intro p {
+                    display: block;
+                    margin-bottom: 30px;
+                }
+                .soon-text {
+                    width: 100%;
+                    border-radius: 0 0 5px 5px;
+                    background-color: #ec7017de;
+                    color: white;
+                    margin-top: -5px;
+                }
+                .soon-text > p {
+                    text-align: center;
+                    font-size: 18px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="cover">
+                <div class="intro">
+                    <div id="content"> 
+                        <p id="slogan">Müşteri Odaklı Servisin <strong>Kılavuzu</strong></p>
+                        <p>
+                            MAKAS Bizz'le çıkacağınız yolculuk ile işletmenizin atlayacağı
+                            seviyelere şahit olacaksınız. Genç ve dinamik kadromuzla beraber
+                            iş yerinizin sektörde hakettiği değeri almasını sağlayacağız.
+                        </p>
+                    </div> 
+                </div>
+                <div class="soon-text">
+                    <p>Ağustos ayında sizlerleyiz!</p>
+                </div>
+            </div>
+        </body>
+</html>
