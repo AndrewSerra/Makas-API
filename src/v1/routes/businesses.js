@@ -30,6 +30,10 @@ router.post('/', async function(req, res, next) {
         description: body.description ? body.description : "",
         image_paths: [],
         ratings: [],
+        opTime: {
+            start: {hour: 0, min: 0},
+            end: {hour: 0, min: 0}
+        },
         created: new Date() 
     }
     // Check the values sent
@@ -298,6 +302,7 @@ router.get('/bid/:businessId', async function(req, res) {
                 description: "$description",
                 image_paths: "$image_paths",
                 rating: { $arrayElemAt: ["$rating", 0] },
+                opTime: "$opTime",
            }
         },
     ]).toArray()
