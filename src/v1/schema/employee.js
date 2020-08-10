@@ -47,28 +47,8 @@ module.exports = {
             bsonType: "array",
             uniqueItems: true,
             items: {
-                bsonType: "object",
-                required: ["day", "start", "end"],
-                properties: {
-                    day: {
-                        enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                        description: "Days of the week" 
-                    },
-                    start: {
-                        bsonType: "object",
-                        properties: {
-                            hour: { bsonType: 'int' },
-                            min: { bsonType: 'int' }
-                        }
-                    },
-                    end: {
-                        bsonType: "object",
-                        properties: {
-                            hour: { bsonType: 'int' },
-                            min: { bsonType: 'int' }
-                        }
-                    }
-                }
+                bsonType: "string",
+                enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
             }
         }
     }

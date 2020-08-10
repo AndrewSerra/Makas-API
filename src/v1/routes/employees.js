@@ -36,7 +36,7 @@ router.post('/', upload.single('imageFile'), async function(req, res, next) {
         rating: [],
         image_path: `${req.protocol}://${req.hostname}:5000/${req.file.path.replace(path.join(__dirname, '../../../uploads'), 'v1/static')}`,
         services: [],
-        shifts: []
+        shifts: req.body.shifts
     }
     
     const check_result = checkers.employee_entry_checker(employee);
@@ -111,7 +111,7 @@ router.put('/eid/:employeeId', async function(req, res) {
     const employeeId = ObjectId(req.body._id);
     let employeeData = req.body;
     delete employeeData._id;
-    console.log(req.body)
+    
     collection.findOneAndUpdate({_id: employeeId}, employeeData)
     .then(response => {
         if(response.value) res.status(status_codes.SUCCESS).send(response);
