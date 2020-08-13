@@ -11,9 +11,11 @@ const { Double } = require('mongodb');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
 const service_settings = require('../settings/service');
+const multer = require('multer');
 
 router = express.Router();
 appointment_master = new AppointmentMaster();
+const upload = multer();
 
 // Create a business for the first time
 router.post('/', async function(req, res, next) {
@@ -328,7 +330,15 @@ router.get('/bid/:businessId/services', async function(req, res) {
         {
             $group: {
                 _id: "$category",
-                services: { $push:  { name: "$name", price: "$price", id: "$_id", } } // You can add more fields if necessary
+                services: { 
+                    $push:  { 
+                        name: "$name", 
+                        price: "$price", 
+                        id: "$_id",
+                        duration: "$duration",
+                        description: "$description",
+                    } 
+                } 
             }
         },
     ]).toArray()
@@ -359,6 +369,37 @@ router.get('/bid/:businessId/employees', async function(req, res) {
     ]).toArray()
     .then(result => res.status(status_codes.SUCCESS).send(result))
     .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close())
+})
+
+router.put('/bid/:businessId', upload.fields([]), async function(req, res) {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.BUSINESS);
+    const businessId = ObjectId(req.params.businessId);
+    const businessData = req.body;
+    let revisedData = {};
+
+    for(let [k, v] of Object.entries(businessData)) {
+        if     (k === 'address')         revisedData.address = {...revisedData.address, street: v};
+        else if(k === 'address-country') revisedData.address = {...revisedData.address, country: v};
+        else if(k === 'address-city')    revisedData.address = {...revisedData.address, city: v};
+        else if(k === 'opStart')         revisedData.opTime = {...revisedData.opTime, start: {hour: Number(v.split(':')[0]), min: Number(v.split(':')[1])}};
+        else if(k === 'opEnd')           revisedData.opTime = {...revisedData.opTime, end: {hour: Number(v.split(':')[0]), min: Number(v.split(':')[1])}};
+        else if(k === 'contact')         revisedData.contact = {...revisedData.contact, phone: v};
+        else revisedData[k] = v;
+    }
+    collection.findOneAndUpdate({_id: businessId}, {$set: revisedData})
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response);
+        else               res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.");
+    })
+    .catch(error => {
+        console.log('err: ', error)
+        res.status(status_codes.ERROR).send(error)
+    })
     .finally(_ => client.close())
 })
 
