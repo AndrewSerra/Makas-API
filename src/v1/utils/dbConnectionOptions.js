@@ -2,7 +2,9 @@
 // due to sockets being all occupied
 module.exports = {
     poolSize: 10, 
-    socketTimeoutMS: 10000,
+    bufferMaxEntries: 0,
+    connectTimeoutMS: 5000,
+    socketTimeoutMS: 3000, 
     useNewUrlParser: true,
     useUnifiedTopology: true
 }

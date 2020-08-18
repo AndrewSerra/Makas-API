@@ -1,5 +1,5 @@
 # Setting up MongoDB Compass
-- Use this command on local device to see it in compass and enabling express to connect \n
+- Use this command on local device to see it in compass and enabling express to connect <br>
 ```ssh -L 4321:localhost:27018 root@142.93.98.210 -f -N mongo --port 4321```
 - For the password check the .env file
 
