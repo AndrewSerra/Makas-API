@@ -55,36 +55,36 @@ router.post("/", async (req, res) => {
             bcrypt.hash(req.body.password, salt, (err, hash) => {
                 if(err) throw err;
                 user.password = hash;
+
+                collection.countDocuments(query)
+                .then((count) => {
+                    // If the user exists
+                    if (count > 0){
+                        //either email or phone should be new to create a new user
+                        res.status(status_codes.CONFLICT).send("User already exists");
+                    } 
+                    else{
+                        // If the user does not have valid email
+                        // If the user does not have valid tel
+                        collection.insertOne(user)
+                        .then(response => {
+                            const revisedUser = response.ops[0];
+                            delete revisedUser.password;
+                            delete revisedUser.created;
+                            delete revisedUser.last_login;
+                            // Success condition everything ok
+                            if(response.result.ok || response !== null) {
+                                res.status(status_codes.SUCCESS).send(revisedUser);
+                            }
+                        })
+                        .catch(error => {
+                            res.status(status_codes.ERROR).send(error);
+                        }) 
+                        .finally(_ => client.close());
+                    }
+                });
             })
         });
-
-        collection.countDocuments(query)
-        .then((count) => {
-            // If the user exists
-            if (count > 0){
-                //either email or phone should be new to create a new user
-                res.status(status_codes.CONFLICT).send("User already exists");
-            } 
-            else{
-                // If the user does not have valid email
-                // If the user does not have valid tel
-                collection.insertOne(user)
-                .then(response => {
-                    const revisedUser = response.ops[0];
-                    delete revisedUser.password;
-                    delete revisedUser.created;
-                    delete revisedUser.last_login;
-                    // Success condition everything ok
-                    if(response.result.ok || response !== null) {
-                        res.status(status_codes.SUCCESS).send(revisedUser);
-                    }
-                })
-                .catch(error => {
-                    res.status(status_codes.ERROR).send(error);
-                }) 
-                .finally(_ => client.close());
-            }
-         });
     }
     else {
         res.status(status_codes.BAD_REQUEST).send(check_result.reason);
