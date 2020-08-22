@@ -11,9 +11,46 @@ const { Double } = require('mongodb');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
 const service_settings = require('../settings/service');
+const multer = require('multer');
 
 router = express.Router();
 appointment_master = new AppointmentMaster();
+const upload = multer();
+
+router.post('/login', async function(req, res, next) {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.BUSINESS);
+    let { email, password } = req.body;
+    console.log(req.body)
+    if(email.trim() === '' || password.trim() === '') {
+        res.sendStatus(status_codes.BAD_REQUEST);
+        client.close();
+        next();
+    }
+
+    const businessDoc = await collection.findOne({ 'contact.email': email });
+
+    // Check if the business email exists in the system
+    if(businessDoc) {
+        // res.status(200).send(businessDoc);
+        bcrypt.compare(password, businessDoc.password, function(error, result) {
+            if(error) {
+                res.sendStatus(status_codes.ERROR);
+                client.close();
+                next();
+            }
+            if(result) res.sendStatus(status_codes.SUCCESS);
+            else       res.status(status_codes.BAD_REQUEST).send("Yanlis sifre.");
+        })
+    }
+    else {
+        res.sendStatus(status_codes.NOT_FOUND);
+    }
+
+    client.close();
+})
 
 // Create a business for the first time
 router.post('/', async function(req, res, next) {
@@ -42,50 +79,50 @@ router.post('/', async function(req, res, next) {
     // Hash the password entered
     bcrypt.genSalt(Number(process.env.SALT_ROUNDS), (err, salt) => {
         if(err)  throw error;
-        bcrypt.hash(req.body.password, salt, (err, hash) => {
+        bcrypt.hash(req.body.password, salt, async (err, hash) => {
             if(err) throw err;
             business.password = hash;
+
+            // Only connects if the check is valid
+            if(check_result.valid) {
+                const client = await MongoClient.connect(process.env.MONGO_URI, options)
+
+                // Connect to database, get collection
+                const db = client.db(process.env.DB_NAME);
+                const collection = db.collection(collection_names.BUSINESS);
+
+                // Check if the business exists
+                const query = {
+                    "contact.email": business.contact.email,
+                }
+                
+                const doc = await collection.findOne(query);  // Only returns the id as doc object
+                
+                if(doc) {
+                    res.status(status_codes.CONFLICT).send("Business already exists");
+                    client.close();
+                    next();
+                }
+                else {
+                    // Insert the document to the database
+                    collection.insertOne(business) 
+                    .then(response => {
+                        // Success condition everything ok
+                        if(response.result.ok || response !== null) {
+                            res.sendStatus(status_codes.SUCCESS);
+                        }
+                    })
+                    .catch(error => {
+                        res.status(status_codes.ERROR).send(error);
+                    }) 
+                    .finally(_ => client.close());
+                }
+            }
+            else {
+                res.status(status_codes.BAD_REQUEST).send(check_result.reason);
+            }
         })
     })
-    
-    // Only connects if the check is valid
-    if(check_result.valid) {
-        const client = await MongoClient.connect(process.env.MONGO_URI, options)
-
-        // Connect to database, get collection
-        const db = client.db(process.env.DB_NAME);
-        const collection = db.collection(collection_names.BUSINESS);
-
-        // Check if the business exists
-        const query = {
-            "contact.email": business.contact.email,
-        }
-        
-        const doc = await collection.findOne(query);  // Only returns the id as doc object
-        
-        if(doc) {
-            res.status(status_codes.CONFLICT).send("Business already exists");
-            client.close();
-            next();
-        }
-        else {
-            // Insert the document to the database
-            collection.insertOne(business) 
-            .then(response => {
-                // Success condition everything ok
-                if(response.result.ok || response !== null) {
-                    res.sendStatus(status_codes.SUCCESS);
-                }
-            })
-            .catch(error => {
-                res.status(status_codes.ERROR).send(error);
-            }) 
-            .finally(_ => client.close());
-        }
-    }
-    else {
-        res.status(status_codes.BAD_REQUEST).send(check_result.reason);
-    }
 })
 
 // Get businesses with query parameters from the business search page 
@@ -328,7 +365,15 @@ router.get('/bid/:businessId/services', async function(req, res) {
         {
             $group: {
                 _id: "$category",
-                services: { $push:  { name: "$name", price: "$price", id: "$_id", } } // You can add more fields if necessary
+                services: { 
+                    $push:  { 
+                        name: "$name", 
+                        price: "$price", 
+                        id: "$_id",
+                        duration: "$duration",
+                        description: "$description",
+                    } 
+                } 
             }
         },
     ]).toArray()
@@ -359,6 +404,37 @@ router.get('/bid/:businessId/employees', async function(req, res) {
     ]).toArray()
     .then(result => res.status(status_codes.SUCCESS).send(result))
     .catch(error => res.status(status_codes.ERROR).send(error))
+    .finally(_ => client.close())
+})
+
+router.put('/bid/:businessId', upload.fields([]), async function(req, res) {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.BUSINESS);
+    const businessId = ObjectId(req.params.businessId);
+    const businessData = req.body;
+    let revisedData = {};
+
+    for(let [k, v] of Object.entries(businessData)) {
+        if     (k === 'address')         revisedData.address = {...revisedData.address, street: v};
+        else if(k === 'address-country') revisedData.address = {...revisedData.address, country: v};
+        else if(k === 'address-city')    revisedData.address = {...revisedData.address, city: v};
+        else if(k === 'opStart')         revisedData.opTime = {...revisedData.opTime, start: {hour: Number(v.split(':')[0]), min: Number(v.split(':')[1])}};
+        else if(k === 'opEnd')           revisedData.opTime = {...revisedData.opTime, end: {hour: Number(v.split(':')[0]), min: Number(v.split(':')[1])}};
+        else if(k === 'contact')         revisedData.contact = {...revisedData.contact, phone: v};
+        else revisedData[k] = v;
+    }
+    collection.findOneAndUpdate({_id: businessId}, {$set: revisedData})
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response);
+        else               res.status(status_codes.BAD_REQUEST).send("Business ID does not exist.");
+    })
+    .catch(error => {
+        console.log('err: ', error)
+        res.status(status_codes.ERROR).send(error)
+    })
     .finally(_ => client.close())
 })
 
