@@ -36,7 +36,7 @@ router.post('/', upload.single('imageFile'), async function(req, res, next) {
         rating: [],
         image_path: `${req.protocol}://${req.hostname}:5000/${req.file.path.replace(path.join(__dirname, '../../../uploads'), 'v1/static')}`,
         services: [],
-        shifts: []
+        shifts: req.body.shifts
     }
     
     const check_result = checkers.employee_entry_checker(employee);
@@ -100,6 +100,28 @@ router.get('/eid/:employeeId', async function(req, res) {
     })
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close());
+})
+
+router.put('/eid/:employeeId', async function(req, res) {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+
+    // Connect to database, get collection
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(col_names.EMPLOYEE);
+    const employeeId = ObjectId(req.body._id);
+    let employeeData = req.body;
+    delete employeeData._id;
+    
+    collection.findOneAndUpdate({_id: employeeId}, employeeData)
+    .then(response => {
+        if(response.value) res.status(status_codes.SUCCESS).send(response);
+        else               res.status(status_codes.BAD_REQUEST).send("Employee ID does not exist.");
+    })
+    .catch(error => {
+        console.log('err: ', error)
+        res.status(status_codes.ERROR).send(error)
+    })
+    .finally(_ => client.close())
 })
 
 // Delete specific business document
