@@ -26,10 +26,11 @@ const PORT = process.env.PORT || 3000;
 check_setup('dev_test');
 
 // Add the routes to the app
-app.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname + '/index.html'));
-});
 app.use('/v1', routerV1);
+app.use(express.static(path.join(__dirname, '../makas-dashboard/build')));
+app.get('*', function(req, res) {
+    res.sendFile(path.join(__dirname, '../makas-dashboard/build', 'index.html'))
+})
 
 const server = app.listen(PORT, () => console.log(`Listening on port ${PORT}`)); 
 
