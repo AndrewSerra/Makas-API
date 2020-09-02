@@ -7,7 +7,6 @@ const checkers = require('../utils/entry_checker');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
-const { Double } = require('mongodb');
 
 const router = express.Router();
 const appointmentMaster = new AppointmentMaster();
@@ -248,9 +247,9 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
     const appointmentId = req.params.appointmentId;
     const query_options = { project: { _id: 1, services: 1, business: 1 } }
 
-    // Find the appointment that is being rated
+    /*// Find the appointment that is being rated
     const appointment = await collection_appointment.findOne({ _id: ObjectId(appointmentId) }, query_options);
-    const num_docs = await collection_rating.countDocuments({ _id: ObjectId(appointmentId) });
+    const num_docs = await collection_rating.countDocuments({ _id: ObjectId(appointmentId) });*/
 
     if(!(req.body.rating instanceof Array)) {
         res.status(status_codes.ERROR).send('Type of rate in body has to be an Array.');
@@ -258,46 +257,37 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
         return next();
     }
 
-    if(appointment.services.length !== req.body.rating.length) {
+    let type_count = 0;
+    for (let i=0; i<req.body.rating.length; i++){
+        if (typeof req.body.rating[i] === "number"){
+            type_count++;
+        }
+    }
+    if (req.body.rating.length !== type_count){
+        res.status(status_codes.ERROR).send('Type of rate has to be a number.');
+    }
+
+    /*if(appointment.services.length !== req.body.rating.length) {
         res.status(status_codes.BAD_REQUEST).send('Number of services do not match the number of ratings.');
         client.close();
         return next();
-    }
+    }*/
 
-    const rating = {
-        _id: ObjectId(appointmentId),
-        business: ObjectId(await appointment.business),
-        rating: req.body.rating.map(rating => Double(rating)),
-        services: appointment.services.map(service => ObjectId(service))
+    const query = {
+        _id: ObjectId(appointmentId)
     }
-
-    if(num_docs !== 0) {
-        /*collection_rating.insertOne(rating)
-        .then(response => {
-            // Success condition everything ok
-            if(response.result.ok || response !== null) {
-                res.sendStatus(status_codes.SUCCESS);
-            }
-        })
+    const update = {
+        $set: {
+            rating: req.body.rating
+        }
+    }
+    collection_appointment.findOneAndUpdate(query, update)
+        .then(response => res.status(status_codes.SUCCESS).send(response))
         .catch(error => res.status(status_codes.ERROR).send(error))
-        .finally(_ => client.close());*/
-        const query = {
-            _id: ObjectId(appointmentId)
-        }
-        const update = {
-            $set: {
-                rating: req.body.rating
-            }
-        }
-        collection_appointment.findOneAndUpdate(query, update)
-            .then(response => res.status(status_codes.SUCCESS).send(response))
-            .catch(error => res.status(status_codes.ERROR).send(error))
-            .finally(_ => client.close())
-    }
-    else {
-        res.status(status_codes.BAD_REQUEST).send('Rating already completed.');
-        client.close();
-    }
+        .finally(_ => client.close())
+
+    // rate array [0] = Business [1]=employee [2]=service
+
 })
 
 router.delete('/aid/:appointmentId', async (req, res) => {
