@@ -15,17 +15,16 @@ router = express.Router();
 router.post('/', async function(req, res, next) {
 
     const body = req.body;
-
+    
     let service = {
         name: body.name,
         business: ObjectId(body.business),
         price: Number(body.price),
         category: body.category,
         description: body.description || "",
-        duration: body.duration,
-        rating: 0,  // Default to 0
+        duration: Number(body.duration),
     }
-    
+    console.log(service)
     const check_result = checkers.service_entry_checker(service);
 
     // Only connects if the check is valid
@@ -62,6 +61,7 @@ router.post('/', async function(req, res, next) {
                 }
             })
             .catch(error => {
+                console.log(error)
                 res.status(status_codes.ERROR).send(error.message);
             }) 
             .finally(_ => client.close());
