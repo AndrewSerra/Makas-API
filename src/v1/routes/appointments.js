@@ -267,26 +267,27 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
         res.status(status_codes.ERROR).send('Type of rate has to be a number.');
     }
 
-    /*if(appointment.services.length !== req.body.rating.length) {
-        res.status(status_codes.BAD_REQUEST).send('Number of services do not match the number of ratings.');
+    // rate array [0] = Business [1]=employee
+    if(req.body.rating.length !== 2) {
+        res.status(status_codes.BAD_REQUEST).send('There can only be ratings for employee and the business. Array length must be equal to 2.');
         client.close();
-        return next();
-    }*/
+    }
 
     const query = {
         _id: ObjectId(appointmentId)
-    }
+    };
     const update = {
         $set: {
             rating: req.body.rating
         }
-    }
+    };
+
     collection_appointment.findOneAndUpdate(query, update)
         .then(response => res.status(status_codes.SUCCESS).send(response))
         .catch(error => res.status(status_codes.ERROR).send(error))
         .finally(_ => client.close())
 
-    // rate array [0] = Business [1]=employee [2]=service
+
 
 })
 
