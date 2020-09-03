@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
     // Add created date
     const date = new Date();
     const body = req.body;
-    const user = { 
+    const user = {
         name: body.name,
         password: body.password,
         contact: {
@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
                     if (count > 0){
                         //either email or phone should be new to create a new user
                         res.status(status_codes.CONFLICT).send("User already exists");
-                    } 
+                    }
                     else{
                         // If the user does not have valid email
                         // If the user does not have valid tel
@@ -79,7 +79,7 @@ router.post("/", async (req, res) => {
                         })
                         .catch(error => {
                             res.status(status_codes.ERROR).send(error);
-                        }) 
+                        })
                         .finally(_ => client.close());
                     }
                 });
@@ -99,7 +99,7 @@ router.post('/login', async (req, res, next) => {
     const collection = db.collection(collection_names.USER);
     // Deconstruct the data from body
     const { contact, password } = req.body;
-    
+
     if(contact.trim() === "" || password.trim() === "" ||
        contact === null       || password === null ||
        contact === undefined  || password === undefined) {
@@ -148,7 +148,7 @@ router.get("/", async (req, res) => {
     // Connect to database, get collection
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.USER);
-    // Create a date object and go back two months back to check 
+    // Create a date object and go back two months back to check
     // whether a user is active on the platform
     const date = new Date();
     date.setMonth(date.getMonth() - 2);
@@ -217,7 +217,7 @@ router.delete("/uid/:userId", async (req, res) => {
         res.status(status_codes.BAD_REQUEST).send("User ID not sent.");
         next();
     }
-    
+
     collection.findOneAndDelete({ _id: ObjectId(req.params.userId) })
     .then(response => {
         if(response.value) {
@@ -236,8 +236,8 @@ router.put("/uid/:userId/favorites/add/:businessId", async (req, res) => {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.USER);
 
-    const query = { 
-        _id: ObjectId(req.params.userId), 
+    const query = {
+        _id: ObjectId(req.params.userId),
         favorites: { $nin: [ObjectId(req.params.businessId)] }
     }
     const update = { $push: { favorites: ObjectId(req.params.businessId) } }
@@ -253,8 +253,8 @@ router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.USER);
 
-    const query = { 
-        _id: ObjectId(req.params.userId), 
+    const query = {
+        _id: ObjectId(req.params.userId),
         favorites: { $eq: ObjectId(req.params.businessId) }
     }
     const update = { $pull: { favorites: ObjectId(req.params.businessId) } }
@@ -263,5 +263,170 @@ router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close())
 });
+
+// Change name of a user
+router.put("/name/uid/:userId", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+
+    const query = {
+        _id: ObjectId(req.params.userId),
+    };
+
+    //get user
+    const user = await collection.findOne({ _id: ObjectId(req.params.userId) }, query);
+    const new_user = {
+        $set : {
+            name: req.body.new_name,
+            password: user.password,
+            contact: user.contact,
+            favorites: user.favorites
+        }
+    };
+    collection.findOneAndUpdate(query, new_user)
+        .then(response => res.status(status_codes.SUCCESS).send(response))
+        .catch(error => res.status(status_codes.ERROR).send(error.message))
+        .finally(_ => client.close());
+
+});
+
+
+// Change phone number of a user
+router.put("/phone/uid/:userId", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+
+    const query = {
+        _id: ObjectId(req.params.userId),
+    };
+
+    //get user
+    const user = await collection.findOne({ _id: ObjectId(req.params.userId) }, query);
+    const phone_number = {
+        $or: [
+            {"contact.phone.number": req.body.new_number},
+        ]
+    }
+    const number_exists = await collection.countDocuments(phone_number);
+    // if number_exists === 0 means the new number is not owned by some other user
+    if (number_exists === 0){
+        // get the new user query
+        const new_contact = {
+            email: user.contact.email,
+            phone:{
+                number: req.body.new_number,
+                verified: user.contact.phone.verified
+            }
+        }
+        const new_user = {
+            $set : {
+                name: user.name,
+                password: user.password,
+                contact: new_contact,
+                favorites: user.favorites
+            }
+        };
+        // find and update
+        collection.findOneAndUpdate(query, new_user)
+            .then(response => res.status(status_codes.SUCCESS).send(response))
+            .catch(error => res.status(status_codes.ERROR).send(error.message))
+            .finally(_ => client.close());
+    }else{
+        res.status(status_codes.CONFLICT).send("Number already exists");
+    }
+});
+
+
+// Change email address of a user
+router.put("/email/uid/:userId", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+
+    const query = {
+        _id: ObjectId(req.params.userId),
+    };
+
+    //get user
+    const user = await collection.findOne({ _id: ObjectId(req.params.userId) }, query);
+    const email_address = {
+        $or: [
+            {"contact.email.address": req.body.new_address},
+        ]
+    }
+    const address_exists = await collection.countDocuments(email_address);
+    // if number_exists === 0 means the new number is not owned by some other user
+    if (address_exists  === 0){
+        // get the new user query
+        const new_contact = {
+            email:{
+                address: req.body.new_address,
+                verified: user.contact.email.verified
+            },
+            phone: user.contact.phone
+        }
+        const new_user = {
+            $set : {
+                name: user.name,
+                password: user.password,
+                contact: new_contact,
+                favorites: user.favorites
+            }
+        };
+        // find and update
+        collection.findOneAndUpdate(query, new_user)
+            .then(response => res.status(status_codes.SUCCESS).send(response))
+            .catch(error => res.status(status_codes.ERROR).send(error.message))
+            .finally(_ => client.close());
+    }else{
+        res.status(status_codes.CONFLICT).send("Address already exists");
+    }
+});
+
+// Change password of a user
+router.put("/password/uid/:userId", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collection_names.USER);
+
+    const query = {
+        _id: ObjectId(req.params.userId),
+    };
+
+    //get user
+    const user = await collection.findOne({ _id: ObjectId(req.params.userId) }, query);
+    const password_authenticate = await bcrypt.compare(req.body.old_password, user.password);
+    // if old password matches encrypt the new password
+    if (password_authenticate){
+        // hash the password entered
+        bcrypt.genSalt(Number(process.env.SALT_ROUNDS), (err, salt) => {
+            if(err)  throw error;
+            bcrypt.hash(req.body.new_password, salt, (err, hash) => {
+                if(err) throw err;
+
+                const new_user = {
+                    $set : {
+                        name: user.name,
+                        password: hash,
+                        contact: user.contact,
+                        favorites: user.favorites
+                    }
+                };
+                // find and update
+                collection.findOneAndUpdate(query, new_user)
+                    .then(response => res.status(status_codes.SUCCESS).send(response))
+                    .catch(error => res.status(status_codes.ERROR).send(error.message))
+                    .finally(_ => client.close());
+
+            })
+        });
+    }else{
+        res.status(status_codes.ERROR).send("Password Invalid")
+    }
+
+});
+
 
 module.exports = router;
