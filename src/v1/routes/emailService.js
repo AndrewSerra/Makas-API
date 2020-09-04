@@ -14,8 +14,8 @@ const transporter = nodemailer.createTransport({
     port: 465,
     secure: true, // true for 465, false for other ports
     auth: {
-        user: 'noreply@makasapp.com', // generated ethereal user
-        pass: 'noreplyPecm5835', // generated ethereal password
+        user: 'noreply@makasapp.com', // user
+        pass: 'noreplyPecm5835', // password
     },
     tls:{
         rejectUnauthorized: false
@@ -23,8 +23,9 @@ const transporter = nodemailer.createTransport({
 });
 
 
-
 // Register
+// or
+// change email
 router.post("/register", async (req, res) => {
 
     const emailServerVerification = await transporter.verify();
@@ -74,49 +75,63 @@ router.post("/register", async (req, res) => {
 });
 
 //Forgot my password
-router.post("/password", async (req, res) => {
+router.post("/password/:userID", async (req, res) => {
 
-    const emailServerVerification = await transporter.verify();
-    if(emailServerVerification){
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collectionUsers = db.collection(collection_names.USER);
 
-        //generate password
-        let newPassword = '';
-        for (let i=0; i< 12;i++){
-            let number = Math.floor((Math.random() * 10));
-            newPassword = newPassword + number.toString()
-        }
+    //check if the user exists
+    const userId = req.params.userId;
+    const user = await collectionUsers.findOne({ _id: ObjectId(userId)})
 
-        //User put (change password)
+    if (user !== null){
+        const emailServerVerification = await transporter.verify();
+        if(emailServerVerification){
 
-        const message = '<h1> MakasApp Şifremi Unuttum </h1>' +
-            '<p>Bu gönderiyi hesap kurtarımı için yeni şifre oluşturabilmek için attık eğer bunun hakkında bir bilginiz yok ise gönderiyi görmezden gelebilirsiniz.</p>' +
-            '<h3> Yeni Şifreniz </h3>' +
-            '<p>Yapmanız Gerekenler: </p>' +
-            '<ul>' +
+            //generate password
+            let newPassword = '';
+            for (let i=0; i< 12;i++){
+                let number = Math.floor((Math.random() * 10));
+                newPassword = newPassword + number.toString()
+            }
+
+            //User put (change password)
+
+            const message = '<h1> MakasApp Şifremi Unuttum </h1>' +
+                '<p>Bu gönderiyi hesap kurtarımı için yeni şifre oluşturabilmek için attık eğer bunun hakkında bir bilginiz yok ise gönderiyi görmezden gelebilirsiniz.</p>' +
+                '<h3> Yeni Şifreniz </h3>' +
+                '<p>Yapmanız Gerekenler: </p>' +
+                '<ul>' +
                 '<li> Aşağıda oluşturulan yeni şifre ile email adresinizi kullanarak yeniden giriş yapmak.</li>' +
                 '<li> Giriş yaptıktan sonra en sağdaki profilim sekmesine girerek, şifrenizi değiştirin. </li>' +
-            '</ul>' +
-            '<p>Yeni Şifreniz: ' + newPassword + '</p>'
+                '</ul>' +
+                '<p>Yeni Şifreniz: ' + newPassword + '</p>'
 
 
-        // send mail with defined transport object
-        let info = await transporter.sendMail({
-            from: '"NoReply MakasApp" <noreply@makasapp.com>', // sender address
-            to: req.body.address, // list of receivers
-            subject: "Şifremi Unuttum", // Subject line
-            //text: "", // plain text body
-            html: message, // html body
-        },(error,info) => {
-            if (error) res.send(error.message)
-            else res.send(info)
-        });
+            // send mail with defined transport object
+            let info = await transporter.sendMail({
+                from: '"NoReply MakasApp" <noreply@makasapp.com>', // sender address
+                to: req.body.address, // list of receivers
+                subject: "Şifremi Unuttum", // Subject line
+                //text: "", // plain text body
+                html: message, // html body
+            },(error,info) => {
+                if (error) res.send(error.message)
+                else res.send(info)
+            });
 
-        /*console.log("Message sent: %s", info.messageId);
-        // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-        */
+            /*console.log("Message sent: %s", info.messageId);
+            // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+            */
+        }else{
+            res.send("Problem in the email server")
+        }
     }else{
-        res.send("Problem in the email server")
+        res.send("The user does not exist")
     }
+
+
 
 });
 
@@ -161,9 +176,7 @@ router.post("/appointment/:appointmentId", async (req, res) => {
         // send mail with defined transport object
         let info = await transporter.sendMail({
             from: '"NoReply MakasApp" <noreply@makasapp.com>', // sender address
-
             //to: req.body.address, // list of receivers for test
-
             to: business.contact.email, // list of receivers
             subject: "Yeni Randevu İsteği", // Subject line
             //text: "", // plain text body
@@ -217,10 +230,8 @@ router.put("/appointment/:appointmentId", async (req, res) => {
         // send mail with defined transport object
         let info = await transporter.sendMail({
             from: '"NoReply MakasApp" <noreply@makasapp.com>', // sender address
-
-            to: req.body.address, // list of receivers for test
-
-            //to: business.contact.email, // list of receivers
+            //to: req.body.address, // list of receivers for test
+            to: business.contact.email, // list of receivers
             subject: "Yeni Randevu İsteği", // Subject line
             //text: "", // plain text body
             html: message, // html body
@@ -261,29 +272,17 @@ router.get("/appointment/:appointmentId", async (req, res) => {
     const emailServerVerification = await transporter.verify();
     if(emailServerVerification){
 
-        var startDate = new Date(appointment.time.start)
-        var endDate = new Date(appointment.time.end)
 
-        const user_message = '<h4> Kullanıcı: ' + user.name +' </h4>' +
-            '<p>Email:' + user.contact.email.address +' </p>' +
-            '<p>Telefon:'+ user.contact.phone.number +'</p>'
-
-        const message = '<h1> MakasBizz ile Yeni Randevunuz Var!</h1>' +
-            '<p>'+ user.name +', ' + employee.name + ' adlı personelinizden ' + service.name +
-            ' servisi için rezervasyon yaptırmak istiyor. </p>' +
-            '<p>Saat: ' + startDate.toTimeString().split(" ")[0] + '-' + endDate.toTimeString().split(" ")[0] + ' </p>' +
-            '<p>Tarih: ' + startDate.toLocaleDateString() + ' </p>' +
-            '<h3> Kullanıcı Bilgileri </h3>' +
-            user_message
+        const message = '<h1> MakasApp ile Randevunuz Bitti!</h1>' +
+            '<p>'+ user.name +', ' + business.name + ' işletmesindeki ' + employee.name + ' adlı personelden ' + service.name +
+            ' servisi için rezervasyonunuz gerçekleşti. Size daha iyi hizmet verebilmek için işletme ve personele vereceğiniz puanlamalara ihtiyacımız var. Lütfen randevunuzu değerlendirmeyi unutmayın</p>'
 
         // send mail with defined transport object
         let info = await transporter.sendMail({
             from: '"NoReply MakasApp" <noreply@makasapp.com>', // sender address
-
             //to: req.body.address, // list of receivers for test
-
             to: business.contact.email, // list of receivers
-            subject: "Yeni Randevu İsteği", // Subject line
+            subject: "Randevunuz Bitti!", // Subject line
             //text: "", // plain text body
             html: message, // html body
         },(error,info) => {
@@ -300,8 +299,34 @@ router.get("/appointment/:appointmentId", async (req, res) => {
 
 });
 
-//change email
 //offers
 //newspaper
+router.post("/offers", async (req, res) => {
+
+    const emailServerVerification = await transporter.verify();
+    if(emailServerVerification){
+
+        const subject = req.body.subject;
+        const message = req.body.code;
+
+
+        // send mail with defined transport object
+        let info = await transporter.sendMail({
+            from: '"NoReply MakasApp" <noreply@makasapp.com>', // sender address
+            to: req.body.address, // list of receivers
+            subject: subject, // Subject line
+            html: message, // html body
+        },(error,info) => {
+            if (error) res.send(error.message)
+            else res.send(info)
+        });
+
+
+    }else{
+        res.send("Problem in the email server")
+    }
+
+});
+
 
 module.exports = router;
