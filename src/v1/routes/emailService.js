@@ -2,6 +2,7 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
+const bcrypt = require('bcrypt');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
 
@@ -82,10 +83,12 @@ router.post("/password/:userID", async (req, res) => {
     const collectionUsers = db.collection(collection_names.USER);
 
     //check if the user exists
-    const userId = req.params.userId;
+    const userId = req.params.userID;
     const user = await collectionUsers.findOne({ _id: ObjectId(userId)})
+    console.log(user)
 
     if (user !== null){
+
         const emailServerVerification = await transporter.verify();
         if(emailServerVerification){
 
@@ -97,6 +100,39 @@ router.post("/password/:userID", async (req, res) => {
             }
 
             //User put (change password)
+            let new_password_hashed = ""
+                // hash the password entered
+            bcrypt.genSalt(Number(process.env.SALT_ROUNDS), (err, salt) => {
+                if(err)  throw error;
+                bcrypt.hash(newPassword, salt, (err, hash) => {
+                    if(err) throw err;
+                    new_password_hashed = hash;
+                })
+            });
+
+            const query = {
+                _id: ObjectId(userId)
+            }
+
+            collectionUsers.findOneAndUpdate(query, { $set: { password: new_password_hashed } })
+                .then(async (response) => {
+                    if(response.value) {
+                        const user = response.value;
+                        bcrypt.compare(password, newPassword, function(error, result) {
+                            if(error) res.status(status_codes.ERROR).send(error);
+                            // Check the result
+                            if(result) {
+                                res.status(status_codes.SUCCESS).send(user);
+                            }
+                            else {
+                                res.status(status_codes.BAD_REQUEST).send("Password invalid");
+                            }
+                        })
+                    }
+                    else res.status(status_codes.BAD_REQUEST).send("User does not exist.");
+                })
+                .catch(error => res.status(status_codes.ERROR).send(error))
+                .finally(_ => client.close())
 
             const message = '<h1> MakasApp Şifremi Unuttum </h1>' +
                 '<p>Bu gönderiyi hesap kurtarımı için yeni şifre oluşturabilmek için attık eğer bunun hakkında bir bilginiz yok ise gönderiyi görmezden gelebilirsiniz.</p>' +
