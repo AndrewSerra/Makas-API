@@ -11,9 +11,9 @@
 module.exports = {
     bsonType: "object",
     required: [
-        "name", 
-        "address", 
-        "location", 
+        "name",
+        "address",
+        "location",
         "contact",
         "opTime",
         "password",
@@ -45,27 +45,30 @@ module.exports = {
             bsonType: "object",
             properties: {
                 type: { bsonType: "string" },
-                coordinates: { 
+                coordinates: {
                     bsonType: "array",
-                    items: { bsonType: "double" } 
+                    items: { bsonType: "double" }
                 }
             }
         },
         opTime: {
-            bsonType: "object",
-            properties: {
-                start: {
-                    bsonType: "object",
-                    properties: {
-                        hour: { bsonType: 'int' },
-                        min: { bsonType: 'int' }
-                    }
-                },
-                end: {
-                    bsonType: "object",
-                    properties: {
-                        hour: { bsonType: 'int' },
-                        min: { bsonType: 'int' }
+            bsonType: "array",
+            items:{
+                bsonType: "object",
+                properties: {
+                    start: {
+                        bsonType: "object",
+                        properties: {
+                            hour: { bsonType: 'int' },
+                            min: { bsonType: 'int' }
+                        }
+                    },
+                    end: {
+                        bsonType: "object",
+                        properties: {
+                            hour: { bsonType: 'int' },
+                            min: { bsonType: 'int' }
+                        }
                     }
                 }
             }
