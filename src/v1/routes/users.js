@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
     // Add created date
     const date = new Date();
     const body = req.body;
-    const user = { 
+    const user = {
         name: body.name,
         password: body.password,
         contact: {
@@ -29,6 +29,7 @@ router.post("/", async (req, res) => {
             },
         },
         favorites: [],
+        verificationCode: [],
         created: date,
         last_login: date,
     };
@@ -62,7 +63,7 @@ router.post("/", async (req, res) => {
                     if (count > 0){
                         //either email or phone should be new to create a new user
                         res.status(status_codes.CONFLICT).send("User already exists");
-                    } 
+                    }
                     else{
                         // If the user does not have valid email
                         // If the user does not have valid tel
@@ -79,7 +80,7 @@ router.post("/", async (req, res) => {
                         })
                         .catch(error => {
                             res.status(status_codes.ERROR).send(error);
-                        }) 
+                        })
                         .finally(_ => client.close());
                     }
                 });
@@ -99,7 +100,7 @@ router.post('/login', async (req, res, next) => {
     const collection = db.collection(collection_names.USER);
     // Deconstruct the data from body
     const { contact, password } = req.body;
-    
+
     if(contact.trim() === "" || password.trim() === "" ||
        contact === null       || password === null ||
        contact === undefined  || password === undefined) {
@@ -141,6 +142,34 @@ router.post('/login', async (req, res, next) => {
     .finally(_ => client.close())
 })
 
+// Verify user contact
+router.post('/verify', async (req, res, next) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collectionUsers = db.collection(collection_names.USER);
+
+    //check if the user exists
+    const userId = req.body._id;
+    const user = await collectionUsers.findOne({ _id: ObjectId(userId)})
+
+    const verificationCode = req.body.verificationCode;
+
+    let count = 0;
+    for (let i=0; i<verificationCode.length; i++){
+        if (verificationCode[i] === user.verificationCode[i]){
+            count++;
+        }
+    }
+    if (count === user.verificationCode.length){
+        console.log("True")
+        res.send("OK")
+    }else{
+        console.log("Error")
+    }
+
+
+})
+
 // Get all user data for admin page
 router.get("/", async (req, res) => {
 
@@ -148,7 +177,7 @@ router.get("/", async (req, res) => {
     // Connect to database, get collection
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.USER);
-    // Create a date object and go back two months back to check 
+    // Create a date object and go back two months back to check
     // whether a user is active on the platform
     const date = new Date();
     date.setMonth(date.getMonth() - 2);
@@ -217,7 +246,7 @@ router.delete("/uid/:userId", async (req, res) => {
         res.status(status_codes.BAD_REQUEST).send("User ID not sent.");
         next();
     }
-    
+
     collection.findOneAndDelete({ _id: ObjectId(req.params.userId) })
     .then(response => {
         if(response.value) {
@@ -236,8 +265,8 @@ router.put("/uid/:userId/favorites/add/:businessId", async (req, res) => {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.USER);
 
-    const query = { 
-        _id: ObjectId(req.params.userId), 
+    const query = {
+        _id: ObjectId(req.params.userId),
         favorites: { $nin: [ObjectId(req.params.businessId)] }
     }
     const update = { $push: { favorites: ObjectId(req.params.businessId) } }
@@ -253,8 +282,8 @@ router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.USER);
 
-    const query = { 
-        _id: ObjectId(req.params.userId), 
+    const query = {
+        _id: ObjectId(req.params.userId),
         favorites: { $eq: ObjectId(req.params.businessId) }
     }
     const update = { $pull: { favorites: ObjectId(req.params.businessId) } }

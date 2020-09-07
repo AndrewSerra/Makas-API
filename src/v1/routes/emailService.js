@@ -28,7 +28,17 @@ const transporter = nodemailer.createTransport({
 // Register
 // or
 // change email
-router.post("/register", async (req, res) => {
+router.post("/register/:userID", async (req, res) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collectionUsers = db.collection(collection_names.USER);
+
+    //check if the user exists
+    const userId = req.params.userID;
+    const user = await collectionUsers.findOne({ _id: ObjectId(userId)})
+
+
+
 
     const emailServerVerification = await transporter.verify();
     if(emailServerVerification){
@@ -40,6 +50,13 @@ router.post("/register", async (req, res) => {
         }
 
         //add it to the users data so verification code could be confirmed later
+
+        const query = {
+            _id: ObjectId(userId)
+        }
+
+        const updatedUser = collectionUsers.findOneAndUpdate(query, { $set: { verificationCode: activationCode } });
+
 
         const message = '<h1> MakasApp Ailesine Hoşgeldiniz </h1>' +
             '<p>Bu gönderiyi email adresinizi doğrulamak için attık eğer bunun hakkında bir bilginiz yok ise gönderiyi görmezden gelebilirsiniz.</p>' +
@@ -57,7 +74,8 @@ router.post("/register", async (req, res) => {
         // send mail with defined transport object
         let info = await transporter.sendMail({
             from: '"NoReply MakasApp" <noreply@makasapp.com>', // sender address
-            to: req.body.address, // list of receivers
+            //to: req.body.address, // list of receivers test
+            to: user.contact.email.address, // list of receivers
             subject: "Aktivasyon Kodu", // Subject line
             //text: "", // plain text body
             html: message, // html body
@@ -86,7 +104,7 @@ router.post("/password/:userID", async (req, res) => {
     //check if the user exists
     const userId = req.params.userID;
     const user = await collectionUsers.findOne({ _id: ObjectId(userId)})
-    console.log(user)
+    //console.log(user)
 
     if (user !== null){
 
