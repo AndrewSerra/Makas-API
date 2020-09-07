@@ -58,8 +58,8 @@ router.post('/', async function(req, res, next) {
     const body = req.body;
     // Add the date and hashed password to the object
     // Correct the location property format
-    const business = { 
-        ...body, 
+    const business = {
+        ...body,
         location: {
             type: "Point",
             coordinates: req.body.location,
@@ -67,15 +67,12 @@ router.post('/', async function(req, res, next) {
         description: body.description ? body.description : "",
         image_paths: [],
         ratings: [],
-        opTime: {
-            start: {hour: 0, min: 0},
-            end: {hour: 0, min: 0}
-        },
-        created: new Date() 
+        opTime: [],
+        created: new Date()
     }
     // Check the values sent
     const check_result = checkers.business_entry_checker(business);
-    
+
     // Hash the password entered
     bcrypt.genSalt(Number(process.env.SALT_ROUNDS), (err, salt) => {
         if(err)  throw error;
@@ -95,9 +92,9 @@ router.post('/', async function(req, res, next) {
                 const query = {
                     "contact.email": business.contact.email,
                 }
-                
+
                 const doc = await collection.findOne(query);  // Only returns the id as doc object
-                
+
                 if(doc) {
                     res.status(status_codes.CONFLICT).send("Business already exists");
                     client.close();
@@ -105,16 +102,35 @@ router.post('/', async function(req, res, next) {
                 }
                 else {
                     // Insert the document to the database
-                    collection.insertOne(business) 
+                    collection.insertOne(business)
                     .then(response => {
                         // Success condition everything ok
                         if(response.result.ok || response !== null) {
+
+                            let employee = {
+                                name: "OTOMATİK SEÇİM",
+                                business: ObjectId(response.ops[0]._id),
+                                appointments: [],
+                                description: "",
+                                rating: [],
+                                image_path: [],
+                                services: [],
+                                shifts: []
+                            }
+
+                            const check_result = checkers.employee_entry_checker(employee);
+                            if (check_result){
+                                const collectionEmployee = db.collection(collection_names.EMPLOYEE);
+                                const addAutomated = collectionEmployee.insertOne(employee);
+                            }
+
                             res.sendStatus(status_codes.SUCCESS);
                         }
                     })
                     .catch(error => {
+                        console.log(error.message)
                         res.status(status_codes.ERROR).send(error);
-                    }) 
+                    })
                     .finally(_ => client.close());
                 }
             }
@@ -125,7 +141,7 @@ router.post('/', async function(req, res, next) {
     })
 })
 
-// Get businesses with query parameters from the business search page 
+// Get businesses with query parameters from the business search page
 // Structure:
 // ?range=0.5&name=ekm&location=meksika+sokagi&date[day]=23&date[month]=01&date[year]=2020&time[hr]=10&time[min]=30&numDocs=10&offset=0
 router.get('/', async function(req, res, next) {
@@ -137,7 +153,7 @@ router.get('/', async function(req, res, next) {
     const range = Number(query_init.range) ? Number(query_init.range) : 10;           // Defaults to 10km
     const offset = Number(query_init.offset) ? Number(query_init.offset) : 0;         // Defaults to offset of 0
     const num_docs =  Number(query_init.num_docs) ? Number(query_init.num_docs) : 10; // Defaults the limit to 10 docs
-    const category = Object.keys(service_settings).includes(query_init.category) ? [query_init.category] : Object.keys(service_settings); 
+    const category = Object.keys(service_settings).includes(query_init.category) ? [query_init.category] : Object.keys(service_settings);
 
     // Clean the  query object
     for(let[key, value] of Object.entries(query_init)) {
@@ -149,7 +165,7 @@ router.get('/', async function(req, res, next) {
         }
     }
 
-    // Correct location format 
+    // Correct location format
     let correct_format_loc;
     if(query_init.location) {
         correct_format_loc = query_init.location.split(",");
@@ -167,18 +183,18 @@ router.get('/', async function(req, res, next) {
     const collection = db.collection(collection_names.BUSINESS);
 
     let re_name = new RegExp(query_init.name ? query_init.name : "", 'i')                   // 'i' for case insensitive
-    let re_addr = new RegExp(query_init.location_name ? query_init.location_name : "", 'i') 
+    let re_addr = new RegExp(query_init.location_name ? query_init.location_name : "", 'i')
 
     // Create the time object from the data in the query
     const query_date = query_init.date;
     const query_time = query_init.time;
     const time = {
-        date: `${query_date.year}-${query_date.month}-${query_date.day}`, 
+        date: `${query_date.year}-${query_date.month}-${query_date.day}`,
         start: { hour: Number(query_time.hr), minute: Number(query_time.min)}
     }
     // Adjust the time component of the date
     const appointment_start_req = appointment_master.format_start_date(time);
-    
+
     collection.aggregate([
         {
             $geoNear: {
@@ -204,7 +220,7 @@ router.get('/', async function(req, res, next) {
                             category: 1,
                             duration: 1,
                         }
-                    } 
+                    }
                 ],
                 as: "services"
             }
@@ -235,15 +251,15 @@ router.get('/', async function(req, res, next) {
                 from: collection_names.APPOINTMENT,
                 let: { business: "$_id" },
                 pipeline: [
-                    { 
-                        $match: { 
-                            $expr: { 
-                                $eq: ["$business", "$$business"] 
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$business", "$$business"]
                             },
                             'time.end': { $not: { $lte: appointment_start_req } },
                             'time.start': { $not: { $gte: appointment_start_req } },
                             status: { $not: { $eq: 'completed' } }
-                        } 
+                        }
                     }
                 ],
                 as: "appointment_conflict"
@@ -262,7 +278,7 @@ router.get('/', async function(req, res, next) {
                 as: "rating"
             }
         },
-        { 
+        {
             $project: {
                  name: "$name",
                  address: "$address",
@@ -330,7 +346,7 @@ router.get('/bid/:businessId', async function(req, res) {
                 as: "rating"
             }
         },
-        { 
+        {
            $project: {
                 name: "$name",
                 address: "$address",
@@ -365,15 +381,15 @@ router.get('/bid/:businessId/services', async function(req, res) {
         {
             $group: {
                 _id: "$category",
-                services: { 
-                    $push:  { 
-                        name: "$name", 
-                        price: "$price", 
+                services: {
+                    $push:  {
+                        name: "$name",
+                        price: "$price",
                         id: "$_id",
                         duration: "$duration",
                         description: "$description",
-                    } 
-                } 
+                    }
+                }
             }
         },
     ]).toArray()
