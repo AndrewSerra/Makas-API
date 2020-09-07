@@ -73,7 +73,7 @@ router.post('/', async (req, res, next) => {
                 .catch(error => {
                     console.log(error);
                     res.status(status_codes.ERROR).send(error)
-                }) 
+                })
                 .finally(_ => client.close());
             }
         })
@@ -164,7 +164,7 @@ router.get('/uid/:userId', async (req, res) => {
     .finally(_ => client.close());
 })
 
-// Has search params to be added, param is date 
+// Has search params to be added, param is date
 // Format:
 // ?date[day]=&date[month]=&date[year]=
 router.get('/bid/:businessId/search', async (req, res) => {
@@ -174,13 +174,13 @@ router.get('/bid/:businessId/search', async (req, res) => {
     const date_str = `${req.query.date.year}-${req.query.date.month}-${req.query.date.day}`;
     const time_start = { date: date_str, start: {hour:0, minute:0}};
     const time_end = { date: date_str, start: {hour:23, minute:59}};
-    
+
     collection.aggregate([
-        { 
-            $match: { 
-                business: ObjectId(req.params.businessId), 
+        {
+            $match: {
+                business: ObjectId(req.params.businessId),
                 'time.start': { $gte: appointmentMaster.format_start_date(time_start), $lte: appointmentMaster.format_start_date(time_end) }
-            } 
+            }
         },
         {
             $lookup: {
@@ -194,14 +194,14 @@ router.get('/bid/:businessId/search', async (req, res) => {
             }
         },
         { $sort: { 'time.start': 1 } },
-        { 
+        {
             $project: {
                 employees: "$employees",
                 services: "$services",
                 time: "$time",
                 status: "$status",
-                user: { $arrayElemAt: ["$user", 0] } 
-            } 
+                user: { $arrayElemAt: ["$user", 0] }
+            }
         }
     ]).toArray()
     .then(response =>  res.status(status_codes.SUCCESS).send(response))
@@ -274,13 +274,63 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
                 res.sendStatus(status_codes.SUCCESS);
             }
         })
-        .catch(error => res.status(status_codes.ERROR).send(error)) 
+        .catch(error => res.status(status_codes.ERROR).send(error))
         .finally(_ => client.close());
     }
     else {
         res.status(status_codes.BAD_REQUEST).send('Rating already completed.');
         client.close();
     }
+})
+
+router.put('/aid/:appointmentId/employee/:oldEmployeeId/:newEmployeeId', async (req, res, next) => {
+
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collectionAppointments = db.collection(collection_names.APPOINTMENT);
+    const collectionEmployees = db.collection(collection_names.EMPLOYEE);
+    const appointmentId = req.params.appointmentId;
+    const oldEmployeeId = req.params.oldEmployeeId;
+    const newEmployeeId = req.params.newEmployeeId;
+
+
+    // Find the appointment that is being rated
+    const num_docs_appointments = await collectionAppointments.countDocuments({ _id: ObjectId(appointmentId) });
+    const num_docs_employees = await collectionEmployees.countDocuments({ _id: ObjectId(oldEmployeeId) });
+    const num_docs_employees_new = await collectionEmployees.countDocuments({ _id: ObjectId(newEmployeeId) });
+    if (num_docs_appointments !== 0 && num_docs_employees !== 0 && num_docs_employees_new !== 0){
+        const appointment = await collectionAppointments.findOne({ _id: ObjectId(appointmentId) });
+        const appointmentEmployees = appointment.employees;
+        if (appointmentEmployees.includes(oldEmployeeId)){
+            let newAppointmentEmployees = [];
+            // add all employees other than the one that is going to change
+            for (let i=0; i<appointmentEmployees.length; i++){
+                if (appointmentEmployees[i] !== oldEmployeeId){
+                    newAppointmentEmployees.push(appointmentEmployees[i])
+                }
+            }
+            //add the new employee
+            newAppointmentEmployees.push(newEmployeeId);
+            collectionAppointments.findOneAndUpdate({ _id: ObjectId(appointmentId)}, { $set: { employees: newAppointmentEmployees} })
+                .then(response => {
+                    if(response.value) res.status(status_codes.SUCCESS).send(response);
+                    else               res.status(status_codes.BAD_REQUEST).send("Appointment ID does not exist.");
+                })
+                .catch(error => {
+                    console.log('err: ', error)
+                    res.status(status_codes.ERROR).send(error)
+                })
+                .finally(_ => client.close())
+
+        }else{
+            res.send("The employee is not assigned in the appointment.")
+        }
+
+    }else{
+        res.send("The appointment or the employee does not exist.")
+    }
+
+    
 })
 
 router.delete('/aid/:appointmentId', async (req, res) => {
