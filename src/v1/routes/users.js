@@ -165,6 +165,7 @@ router.post('/verify', async (req, res, next) => {
         res.send("OK")
     }else{
         console.log("Error")
+        res.send("Error")
     }
 
 
