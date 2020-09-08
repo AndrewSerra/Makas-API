@@ -8,6 +8,8 @@ const checkers = require('../utils/entry_checker');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
 
+const jwt = require('jsonwebtoken')
+
 router = express.Router();
 
 // Register
@@ -30,9 +32,14 @@ router.post("/", async (req, res) => {
         },
         favorites: [],
         verificationCode: [],
+        accessToken: "",
         created: date,
         last_login: date,
     };
+
+    const createdAccessToken = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET);
+    user.accessToken = createdAccessToken;
+
 
     const check_result = checkers.user_entry_checker(user);
 
@@ -94,6 +101,7 @@ router.post("/", async (req, res) => {
 
 // Authentication
 router.post('/login', async (req, res, next) => {
+
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     // Connect to database, get collection
     const db = client.db(process.env.DB_NAME);
@@ -125,6 +133,14 @@ router.post('/login', async (req, res, next) => {
                 if(error) res.status(status_codes.ERROR).send(error);
                 // Check the result
                 if(result) {
+                    const token = response.value.accessToken
+
+                    if (token === null) return res.send("Token is null");
+                    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err,user) => {
+                        if (err) return res.send(err.message); // token not valid
+                        next()
+                    })
+
                     let revisedUser = response.value;
                     delete revisedUser.password;
                     delete revisedUser.created;
