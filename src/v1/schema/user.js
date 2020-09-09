@@ -53,6 +53,13 @@ module.exports = {
                 description: "This array has a collection of businessIDs that is in businesses collection that was added as favorite business in the client side"
             }
         },
+        verificationCode:{
+            bsonType: "array",
+            items: {
+                bsonType: "int",
+                description: "This array has positive integers as items"
+            }
+        },
         created: {
             bsonType: 'date',
         },
