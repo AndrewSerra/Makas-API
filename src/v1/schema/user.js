@@ -60,6 +60,10 @@ module.exports = {
                 description: "This array has positive integers as items"
             }
         },
+        accessToken:{
+            bsonType : "string",
+            description: "Contains a string that will be used to verify when the app starts and the user needs to stay logged in"
+        },
         created: {
             bsonType: 'date',
         },
