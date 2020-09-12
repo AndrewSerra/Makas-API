@@ -29,6 +29,7 @@ router.post("/", async (req, res) => {
             },
         },
         favorites: [],
+        verificationCode: [],
         created: date,
         last_login: date,
     };
@@ -139,6 +140,35 @@ router.post('/login', async (req, res, next) => {
     })
     .catch(error => res.status(status_codes.ERROR).send(error))
     .finally(_ => client.close())
+})
+
+// Verify user contact
+router.post('/verify', async (req, res, next) => {
+    const client = await MongoClient.connect(process.env.MONGO_URI, options);
+    const db = client.db(process.env.DB_NAME);
+    const collectionUsers = db.collection(collection_names.USER);
+
+    //check if the user exists
+    const userId = req.body._id;
+    const user = await collectionUsers.findOne({ _id: ObjectId(userId)})
+
+    const verificationCode = req.body.verificationCode;
+
+    let count = 0;
+    for (let i=0; i<verificationCode.length; i++){
+        if (verificationCode[i] === user.verificationCode[i]){
+            count++;
+        }
+    }
+    if (count === user.verificationCode.length){
+        console.log("True")
+        res.send("OK")
+    }else{
+        console.log("Error")
+        res.send("Error")
+    }
+
+
 })
 
 // Get all user data for admin page
