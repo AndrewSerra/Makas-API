@@ -20,7 +20,6 @@ router.post("/uid/:userID", async (req, res) => {
     const createdAccessToken = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET);
     //user.accessToken = createdAccessToken;
 
-
     const query = {
         _id : ObjectId(req.params.userID)
     }
