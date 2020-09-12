@@ -7,7 +7,6 @@ const checkers = require('../utils/entry_checker');
 const options = require('../utils/dbConnectionOptions');
 const collection_names = require('../settings/collection_names');
 const AppointmentMaster = require('../utils/appointment_master');
-const { Double } = require('mongodb');
 
 const router = express.Router();
 const appointmentMaster = new AppointmentMaster();
@@ -28,10 +27,14 @@ router.post('/', async (req, res, next) => {
             duration: Number(body.time.duration),
         },
         services: body.services.map(service => ObjectId(service)),
+        rating: body.rating,
         status: "pending"   // Automatically assign "pending" status
     }
     const check_result = checkers.appointment_entry_checker(appointment);
-    check_result.valid=true
+
+    //hard yes
+    //check_result.valid=true
+
     if(check_result.valid) {
         const client = await MongoClient.connect(process.env.MONGO_URI, options);
         const db = client.db(process.env.DB_NAME);
@@ -73,7 +76,7 @@ router.post('/', async (req, res, next) => {
                 .catch(error => {
                     console.log(error);
                     res.status(status_codes.ERROR).send(error)
-                }) 
+                })
                 .finally(_ => client.close());
             }
         })
@@ -97,6 +100,7 @@ router.get('/uid/:userId', async (req, res) => {
                 services: "$services",
                 employees: "$employees",
                 time: "$time",
+                rating: "$rating",
                 status: "$status"
             }
         },
@@ -164,7 +168,7 @@ router.get('/uid/:userId', async (req, res) => {
     .finally(_ => client.close());
 })
 
-// Has search params to be added, param is date 
+// Has search params to be added, param is date
 // Format:
 // ?date[day]=&date[month]=&date[year]=
 router.get('/bid/:businessId/search', async (req, res) => {
@@ -174,13 +178,13 @@ router.get('/bid/:businessId/search', async (req, res) => {
     const date_str = `${req.query.date.year}-${req.query.date.month}-${req.query.date.day}`;
     const time_start = { date: date_str, start: {hour:0, minute:0}};
     const time_end = { date: date_str, start: {hour:23, minute:59}};
-    
+
     collection.aggregate([
-        { 
-            $match: { 
-                business: ObjectId(req.params.businessId), 
+        {
+            $match: {
+                business: ObjectId(req.params.businessId),
                 'time.start': { $gte: appointmentMaster.format_start_date(time_start), $lte: appointmentMaster.format_start_date(time_end) }
-            } 
+            }
         },
         {
             $lookup: {
@@ -194,14 +198,14 @@ router.get('/bid/:businessId/search', async (req, res) => {
             }
         },
         { $sort: { 'time.start': 1 } },
-        { 
+        {
             $project: {
                 employees: "$employees",
                 services: "$services",
                 time: "$time",
                 status: "$status",
-                user: { $arrayElemAt: ["$user", 0] } 
-            } 
+                user: { $arrayElemAt: ["$user", 0] }
+            }
         }
     ]).toArray()
     .then(response =>  res.status(status_codes.SUCCESS).send(response))
@@ -243,9 +247,9 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
     const appointmentId = req.params.appointmentId;
     const query_options = { project: { _id: 1, services: 1, business: 1 } }
 
-    // Find the appointment that is being rated
+    /*// Find the appointment that is being rated
     const appointment = await collection_appointment.findOne({ _id: ObjectId(appointmentId) }, query_options);
-    const num_docs = await collection_rating.countDocuments({ _id: ObjectId(appointmentId) });
+    const num_docs = await collection_rating.countDocuments({ _id: ObjectId(appointmentId) });*/
 
     if(!(req.body.rating instanceof Array)) {
         res.status(status_codes.ERROR).send('Type of rate in body has to be an Array.');
@@ -253,34 +257,38 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
         return next();
     }
 
-    if(appointment.services.length !== req.body.rating.length) {
-        res.status(status_codes.BAD_REQUEST).send('Number of services do not match the number of ratings.');
-        client.close();
-        return next();
+    let type_count = 0;
+    for (let i=0; i<req.body.rating.length; i++){
+        if (typeof req.body.rating[i] === "number"){
+            type_count++;
+        }
+    }
+    if (req.body.rating.length !== type_count){
+        res.status(status_codes.ERROR).send('Type of rate has to be a number.');
     }
 
-    const rating = {
-        _id: ObjectId(appointmentId),
-        business: ObjectId(await appointment.business),
-        rating: req.body.rating.map(rating => Double(rating)),
-        services: appointment.services.map(service => ObjectId(service))
-    }
-
-    if(num_docs === 0) {
-        collection_rating.insertOne(rating)
-        .then(response => {
-            // Success condition everything ok
-            if(response.result.ok || response !== null) {
-                res.sendStatus(status_codes.SUCCESS);
-            }
-        })
-        .catch(error => res.status(status_codes.ERROR).send(error)) 
-        .finally(_ => client.close());
-    }
-    else {
-        res.status(status_codes.BAD_REQUEST).send('Rating already completed.');
+    // rate array [0] = Business [1]=employee
+    if(req.body.rating.length !== 2) {
+        res.status(status_codes.BAD_REQUEST).send('There can only be ratings for employee and the business. Array length must be equal to 2.');
         client.close();
     }
+
+    const query = {
+        _id: ObjectId(appointmentId)
+    };
+    const update = {
+        $set: {
+            rating: req.body.rating
+        }
+    };
+
+    collection_appointment.findOneAndUpdate(query, update)
+        .then(response => res.status(status_codes.SUCCESS).send(response))
+        .catch(error => res.status(status_codes.ERROR).send(error))
+        .finally(_ => client.close())
+
+
+
 })
 
 router.delete('/aid/:appointmentId', async (req, res) => {

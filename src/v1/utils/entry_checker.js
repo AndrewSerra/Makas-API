@@ -79,10 +79,10 @@ function employee_entry_checker(employee) {
         if(Object.keys(required_keys).includes(key)) {
             required_keys[key] = 0;
         }
-        
+
         // Value check for being null, undefined or empty string
-        if(value === null || 
-            (value === "" && Object.keys(required_keys).includes(key)) || 
+        if(value === null ||
+            (value === "" && Object.keys(required_keys).includes(key)) ||
             value === undefined) {
 
             includes_undef = true;
@@ -122,7 +122,7 @@ function service_entry_checker(service) {
         }
         if(key === "category" && !Object.keys(category_service_obj).includes(value)) {
             // Return immediately because name field will not be able to get the valid key
-            // in category_service_obj and fail due to the .includes() 
+            // in category_service_obj and fail due to the .includes()
             return {
                 valid: false,
                 reason: reasons.NON_ENUM_VAL_FOUND,
@@ -136,9 +136,9 @@ function service_entry_checker(service) {
                 reason = reasons.NON_ENUM_VAL_FOUND;
             }
         }
-        
+
         // Value check for being null, undefined or empty string
-        if(value === null || 
+        if(value === null ||
             (value === "" && Object.keys(required_keys).includes(key)) || value === undefined) {
 
             includes_undef = true;
@@ -184,7 +184,7 @@ function user_entry_checker(user) {
                 reason = reasons.CONTAINS_UNDEF;
             }
         }
-        
+
         // Value check for being null, undefined or empty string
         if(value === null || value === "" || value === undefined) {
             includes_undef = true;
@@ -217,10 +217,12 @@ function appointment_entry_checker(appointment) {
         employees: 1,
         time: 1,
         services: 1,
+        rating: 1,
         status: 1,
     }
 
     for(let[key, value] of Object.entries(appointment)) {
+
         // Change the flags when a required key is encountered
         if(Object.keys(required_keys).includes(key)) {
             required_keys[key] = 0;
@@ -242,6 +244,7 @@ function appointment_entry_checker(appointment) {
             }
         }
     }
+    console.log(required_keys,includes_undef,reason)
     // Check if the required values are met
     let is_missing_fields = Object.values(required_keys).some(e => e === 1);
     reason = is_missing_fields ? reasons.MISSING_REQUIRED_FIELD : reason;

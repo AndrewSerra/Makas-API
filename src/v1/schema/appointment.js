@@ -7,6 +7,7 @@ module.exports = {
         "employees",
         "time",
         "services",
+        "rating",
         "status",
     ],
     properties: {
@@ -28,7 +29,7 @@ module.exports = {
             properties: {
                 start: { bsonType: 'date' },
                 end: { bsonType: "date"},
-                duration: { 
+                duration: {
                     bsonType: "int",
                     description: "Duration in minutes."
                 }
@@ -40,6 +41,13 @@ module.exports = {
             items: {
                 bsonType: "objectId",
                 description: "This is a collection of serviceIDs and it is required.",
+            }
+        },
+        rating:{
+            bsonType: "array",
+            items: {
+                bsonType: "double",
+                description: "if it is -1 than the rating is not given yet, if it is a bool between 0-5 than"
             }
         },
         status:{ enum: ["pending", "accepted", "cancelled", "complete"], },
