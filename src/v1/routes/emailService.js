@@ -95,15 +95,23 @@ router.post("/register/:userID", async (req, res) => {
 });
 
 //Forgot my password
-router.post("/password/:userID", async (req, res) => {
+router.post("/password", async (req, res) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     const db = client.db(process.env.DB_NAME);
     const collectionUsers = db.collection(collection_names.USER);
 
     //check if the user exists
-    const userId = req.params.userID;
-    const user = await collectionUsers.findOne({ _id: ObjectId(userId)})
+    const address = req.body.address;
+    const query = {
+        $or: [
+            {"contact.email.address": address},
+            {"contact.phone.number": address},
+        ],
+    }
+
+    const user = await collectionUsers.findOne(query);
+    const userId = user._id;
     //console.log(user)
 
     if (user !== null){
@@ -129,8 +137,8 @@ router.post("/password/:userID", async (req, res) => {
             }
 
 
-            console.log(newPassword);
-            console.log(new_password_hashed);
+            //console.log(newPassword);
+            //console.log(new_password_hashed);
 
             bcrypt.compare(newPassword, new_password_hashed, function(error, result) {
                 if(error) res.send(error.message);
@@ -184,7 +192,6 @@ router.post("/password/:userID", async (req, res) => {
     }else{
         res.send("The user does not exist")
     }
-
 
 
 });
