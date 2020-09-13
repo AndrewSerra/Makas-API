@@ -330,8 +330,17 @@ router.put("/name/uid/:userId", async (req, res) => {
             favorites: user.favorites
         }
     };
+    const responseValue = {
+        _id : req.params.userId,
+        name: req.body.new_name,
+        password: user.password,
+        contact: user.contact,
+        favorites: user.favorites,
+        verificationCode: user.verificationCode,
+        accessToken: user.accessToken
+    }
     collection.findOneAndUpdate(query, new_user)
-        .then(response => res.status(status_codes.SUCCESS).send(response))
+        .then(response => res.status(status_codes.SUCCESS).send(responseValue))
         .catch(error => res.status(status_codes.ERROR).send(error.message))
         .finally(_ => client.close());
 
@@ -374,9 +383,19 @@ router.put("/phone/uid/:userId", async (req, res) => {
                 favorites: user.favorites
             }
         };
+
+        const responseValue = {
+            _id : req.params.userId,
+            name: req.body.name,
+            password: user.password,
+            contact: new_contact,
+            favorites: user.favorites,
+            verificationCode: user.verificationCode,
+            accessToken: user.accessToken
+        }
         // find and update
         collection.findOneAndUpdate(query, new_user)
-            .then(response => res.status(status_codes.SUCCESS).send(response))
+            .then(response => res.status(status_codes.SUCCESS).send(responseValue))
             .catch(error => res.status(status_codes.ERROR).send(error.message))
             .finally(_ => client.close());
     }else{
@@ -421,9 +440,18 @@ router.put("/email/uid/:userId", async (req, res) => {
                 favorites: user.favorites
             }
         };
+        const responseValue = {
+            _id : req.params.userId,
+            name: req.body.name,
+            password: user.password,
+            contact: new_contact,
+            favorites: user.favorites,
+            verificationCode: user.verificationCode,
+            accessToken: user.accessToken
+        }
         // find and update
         collection.findOneAndUpdate(query, new_user)
-            .then(response => res.status(status_codes.SUCCESS).send(response))
+            .then(response => res.status(status_codes.SUCCESS).send(responseValue))
             .catch(error => res.status(status_codes.ERROR).send(error.message))
             .finally(_ => client.close());
     }else{
@@ -460,9 +488,18 @@ router.put("/password/uid/:userId", async (req, res) => {
                         favorites: user.favorites
                     }
                 };
+                const responseValue = {
+                    _id : req.params.userId,
+                    name: req.body.name,
+                    password: hash,
+                    contact: user.contact,
+                    favorites: user.favorites,
+                    verificationCode: user.verificationCode,
+                    accessToken: user.accessToken
+                }
                 // find and update
                 collection.findOneAndUpdate(query, new_user)
-                    .then(response => res.status(status_codes.SUCCESS).send(response))
+                    .then(response => res.status(status_codes.SUCCESS).send(responseValue))
                     .catch(error => res.status(status_codes.ERROR).send(error.message))
                     .finally(_ => client.close());
 

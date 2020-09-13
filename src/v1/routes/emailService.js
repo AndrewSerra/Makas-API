@@ -111,11 +111,11 @@ router.post("/password", async (req, res) => {
     }
 
     const user = await collectionUsers.findOne(query);
-    const userId = user._id;
+
     //console.log(user)
 
     if (user !== null){
-
+        const userId = user._id;
         const emailServerVerification = await transporter.verify();
         if(emailServerVerification){
 
@@ -148,6 +148,7 @@ router.post("/password", async (req, res) => {
                         .then(async (response) => {
                             if(response.value) {
                                 const user = response.value;
+
                             }
                             else res.status(status_codes.BAD_REQUEST).send("User does not exist.");
                         })
@@ -170,6 +171,7 @@ router.post("/password", async (req, res) => {
                 '</ul>' +
                 '<p>Yeni Şifreniz: ' + newPassword + '</p>'
 
+            const user = await collectionUsers.findOne(query);
 
             // send mail with defined transport object
             let info = await transporter.sendMail({
