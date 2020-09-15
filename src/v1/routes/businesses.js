@@ -23,7 +23,7 @@ router.post('/login', async function(req, res, next) {
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collection_names.BUSINESS);
     let { email, password } = req.body;
-    console.log(req.body)
+    
     if(email.trim() === '' || password.trim() === '') {
         res.sendStatus(status_codes.BAD_REQUEST);
         client.close();
@@ -41,7 +41,7 @@ router.post('/login', async function(req, res, next) {
                 client.close();
                 next();
             }
-            if(result) res.sendStatus(status_codes.SUCCESS);
+            if(result) res.status(status_codes.SUCCESS).send({_id: businessDoc._id});
             else       res.status(status_codes.BAD_REQUEST).send("Yanlis sifre.");
         })
     }

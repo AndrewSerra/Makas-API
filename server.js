@@ -27,7 +27,7 @@ check_setup('dev_test');
 
 // Add the routes to the app
 app.use('/v1', routerV1);
-app.use(express.static(path.join(__dirname, '../makas-dashboard/build')));
+app.use('/', express.static(path.join(__dirname, '../makas-dashboard/build')));
 app.get('*', function(req, res) {
     res.sendFile(path.join(__dirname, '../makas-dashboard/build', 'index.html'))
 })
