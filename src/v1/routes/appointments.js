@@ -250,6 +250,7 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
     const appointment = await collection_appointment.findOne({ _id: ObjectId(appointmentId) });
 
 
+
     if(!(req.body.rating instanceof Array)) {
         res.status(status_codes.ERROR).send('Type of rate in body has to be an Array.');
         client.close();
@@ -284,8 +285,17 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
     if (apoointment === null || appointment === undefined){
         res.send("Could not find the appointment")
     }else{
-        let responseValue = appointment;
-        responseValue.rating = req.body.rating;
+        const responseValue = {
+            _id : appointment._id,
+            user: appointment.user,
+            business: appointment.business,
+            services: appointment.services,
+            employees: appointment.employees,
+            time: appointment.time,
+            rating: req.body.rating,
+            status: appointment.status
+        }
+
         collection_appointment.findOneAndUpdate(query, update)
             .then(response => res.status(status_codes.SUCCESS).send(responseValue))
             .catch(error => res.status(status_codes.ERROR).send(error))
