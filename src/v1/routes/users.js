@@ -386,7 +386,7 @@ router.put("/phone/uid/:userId", async (req, res) => {
 
         const responseValue = {
             _id : req.params.userId,
-            name: req.body.name,
+            name: user.name,
             password: user.password,
             contact: new_contact,
             favorites: user.favorites,
@@ -442,7 +442,7 @@ router.put("/email/uid/:userId", async (req, res) => {
         };
         const responseValue = {
             _id : req.params.userId,
-            name: req.body.name,
+            name: user.name,
             password: user.password,
             contact: new_contact,
             favorites: user.favorites,
@@ -490,7 +490,7 @@ router.put("/password/uid/:userId", async (req, res) => {
                 };
                 const responseValue = {
                     _id : req.params.userId,
-                    name: req.body.name,
+                    name: user.name,
                     password: hash,
                     contact: user.contact,
                     favorites: user.favorites,
