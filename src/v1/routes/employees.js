@@ -46,7 +46,8 @@ router.post('/', upload.single('imageFile'), async function(req, res, next) {
         const client = await MongoClient.connect(process.env.MONGO_URI, options)
 
         // Connect to database, get collection
-        const db = client.db(process.env.DB_NAME);
+        const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+        const db = client.db(dbName);
         const collection = db.collection(col_names.EMPLOYEE);
 
         // Check if the employee exists
@@ -90,7 +91,8 @@ router.get('/eid/:employeeId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(col_names.EMPLOYEE);
 
     collection.findOne({ _id: ObjectId(req.params.employeeId) })
@@ -106,7 +108,8 @@ router.put('/eid/:employeeId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(col_names.EMPLOYEE);
     const employeeId = ObjectId(req.body._id);
     let employeeData = req.body;
@@ -130,7 +133,8 @@ router.delete('/eid/:employeeId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(col_names.EMPLOYEE);
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.employeeId) })

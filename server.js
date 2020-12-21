@@ -23,7 +23,8 @@ const PORT = process.env.PORT || 3000;
 // It will connect to database dev_test
 // Later it will be changed to production when needed
 // This is just to test the connection on startup
-check_setup('dev_test');
+const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+check_setup(dbName);
 
 // Add the routes to the app
 app.use('/v1', routerV1);

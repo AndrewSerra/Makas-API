@@ -20,7 +20,8 @@ const upload = multer();
 router.post('/login', async function(req, res, next) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.BUSINESS);
     let { email, password } = req.body;
     
@@ -88,7 +89,8 @@ router.post('/', async function(req, res, next) {
                 const client = await MongoClient.connect(process.env.MONGO_URI, options)
 
                 // Connect to database, get collection
-                const db = client.db(process.env.DB_NAME);
+                const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+                const db = client.db(dbName);
                 const collection = db.collection(collection_names.BUSINESS);
 
                 // Check if the business exists
@@ -163,7 +165,8 @@ router.get('/', async function(req, res, next) {
         next();
     }
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.BUSINESS);
 
     let re_name = new RegExp(query_init.name ? query_init.name : "", 'i')                   // 'i' for case insensitive
@@ -304,7 +307,8 @@ router.get('/bid/:businessId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.BUSINESS);
 
     collection.aggregate([
@@ -357,7 +361,8 @@ router.get('/bid/:businessId/services', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.SERVICE);
 
     collection.aggregate([
@@ -388,7 +393,8 @@ router.get('/bid/:businessId/employees', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.EMPLOYEE);
 
     collection.aggregate([
@@ -411,7 +417,8 @@ router.put('/bid/:businessId', upload.fields([]), async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.BUSINESS);
     const businessId = ObjectId(req.params.businessId);
     const businessData = req.body;
@@ -444,7 +451,8 @@ router.delete('/bid/:businessId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.BUSINESS);
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.businessId) })

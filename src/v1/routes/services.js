@@ -32,7 +32,8 @@ router.post('/', async function(req, res, next) {
         const client = await MongoClient.connect(process.env.MONGO_URI, options)
 
         // Connect to database, get collection
-        const db = client.db(process.env.DB_NAME);
+        const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+        const db = client.db(dbName);
         const collection = db.collection(col_names.SERVICE);
 
         // Check if the employee exists
@@ -85,7 +86,8 @@ router.get('/sid/:serviceId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(col_names.SERVICE);
 
     collection.findOne({ _id: ObjectId(req.params.serviceId) })
@@ -103,7 +105,8 @@ router.delete('/sid/:serviceId', async function(req, res) {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(col_names.SERVICE);
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.serviceId) })

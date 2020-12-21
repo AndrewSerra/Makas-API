@@ -54,7 +54,8 @@ router.post("/", async (req, res) => {
         const client = await MongoClient.connect(process.env.MONGO_URI, options);
 
         // Connect to database, get collection
-        const db = client.db(process.env.DB_NAME);
+        const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+        const db = client.db(dbName);
         const collection = db.collection(collection_names.USER);
 
         // hash the password entered
@@ -104,7 +105,8 @@ router.post('/login', async (req, res, next) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
     // Deconstruct the data from body
     const { contact, password } = req.body;
@@ -161,7 +163,8 @@ router.post('/login', async (req, res, next) => {
 // Verify user contact
 router.post('/verify', async (req, res, next) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collectionUsers = db.collection(collection_names.USER);
 
     //check if the user exists
@@ -192,7 +195,8 @@ router.get("/", async (req, res) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
     // Create a date object and go back two months back to check
     // whether a user is active on the platform
@@ -232,7 +236,8 @@ router.get("/uid/:userId", async (req, res) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     const query_options = {
@@ -256,7 +261,8 @@ router.get("/uid/:userId", async (req, res) => {
 router.delete("/uid/:userId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
     // Connect to database, get collection
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     if(req.params.userId === undefined || req.params.userId === null || req.params.userId === "") {
@@ -279,7 +285,8 @@ router.delete("/uid/:userId", async (req, res) => {
 // Add business to favorites: Add businessID from user.favorites
 router.put("/uid/:userId/favorites/add/:businessId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     const query = {
@@ -296,7 +303,8 @@ router.put("/uid/:userId/favorites/add/:businessId", async (req, res) => {
 // Remove business from favorites: Remove businessID from user.favorites
 router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     const query = {
@@ -313,7 +321,8 @@ router.put("/uid/:userId/favorites/remove/:businessId", async (req, res) => {
 // Change name of a user
 router.put("/name/uid/:userId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     const query = {
@@ -350,7 +359,8 @@ router.put("/name/uid/:userId", async (req, res) => {
 // Change phone number of a user
 router.put("/phone/uid/:userId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     const query = {
@@ -407,7 +417,8 @@ router.put("/phone/uid/:userId", async (req, res) => {
 // Change email address of a user
 router.put("/email/uid/:userId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     const query = {
@@ -462,7 +473,8 @@ router.put("/email/uid/:userId", async (req, res) => {
 // Change password of a user
 router.put("/password/uid/:userId", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.USER);
 
     const query = {

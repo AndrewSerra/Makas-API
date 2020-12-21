@@ -37,7 +37,8 @@ router.post('/', async (req, res, next) => {
 
     if(check_result.valid) {
         const client = await MongoClient.connect(process.env.MONGO_URI, options);
-        const db = client.db(process.env.DB_NAME);
+        const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+        const db = client.db(dbName);
         const collection = db.collection(collection_names.APPOINTMENT);
 
         const query = {
@@ -88,7 +89,8 @@ router.post('/', async (req, res, next) => {
 
 router.get('/uid/:userId', async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.APPOINTMENT);
 
     collection.aggregate([
@@ -173,7 +175,8 @@ router.get('/uid/:userId', async (req, res) => {
 // ?date[day]=&date[month]=&date[year]=
 router.get('/bid/:businessId/search', async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.APPOINTMENT);
     const date_str = `${req.query.date.year}-${req.query.date.month}-${req.query.date.day}`;
     const time_start = { date: date_str, start: {hour:0, minute:0}};
@@ -215,7 +218,8 @@ router.get('/bid/:businessId/search', async (req, res) => {
 
 router.put('/aid/:appointmentId/status/:newStatus', async (req, res, next) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.APPOINTMENT);
     const appointmentId = req.params.appointmentId;
     const newStatus = req.params.newStatus.toLowerCase();
@@ -241,7 +245,8 @@ router.put('/aid/:appointmentId/status/:newStatus', async (req, res, next) => {
 
 router.put('/aid/:appointmentId/rate', async (req, res, next) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection_appointment = db.collection(collection_names.APPOINTMENT);
     const collection_rating = db.collection(collection_names.RATING);
     const appointmentId = req.params.appointmentId;
@@ -293,7 +298,8 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
 
 router.delete('/aid/:appointmentId', async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collection = db.collection(collection_names.APPOINTMENT);
 
     collection.findOneAndDelete({ _id: ObjectId(req.params.appointmentId) })
