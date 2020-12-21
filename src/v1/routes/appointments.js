@@ -250,11 +250,11 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
     const collection_appointment = db.collection(collection_names.APPOINTMENT);
     const collection_rating = db.collection(collection_names.RATING);
     const appointmentId = req.params.appointmentId;
-    const query_options = { project: { _id: 1, services: 1, business: 1 } }
 
-    /*// Find the appointment that is being rated
-    const appointment = await collection_appointment.findOne({ _id: ObjectId(appointmentId) }, query_options);
-    const num_docs = await collection_rating.countDocuments({ _id: ObjectId(appointmentId) });*/
+    // Find the appointment that is being rated
+    const appointment = await collection_appointment.findOne({ _id: ObjectId(appointmentId) });
+
+
 
     if(!(req.body.rating instanceof Array)) {
         res.status(status_codes.ERROR).send('Type of rate in body has to be an Array.');
@@ -287,12 +287,25 @@ router.put('/aid/:appointmentId/rate', async (req, res, next) => {
         }
     };
 
-    collection_appointment.findOneAndUpdate(query, update)
-        .then(response => res.status(status_codes.SUCCESS).send(response))
-        .catch(error => res.status(status_codes.ERROR).send(error))
-        .finally(_ => client.close())
+    if (apoointment === null || appointment === undefined){
+        res.send("Could not find the appointment")
+    }else{
+        const responseValue = {
+            _id : appointment._id,
+            user: appointment.user,
+            business: appointment.business,
+            services: appointment.services,
+            employees: appointment.employees,
+            time: appointment.time,
+            rating: req.body.rating,
+            status: appointment.status
+        }
 
-
+        collection_appointment.findOneAndUpdate(query, update)
+            .then(response => res.status(status_codes.SUCCESS).send(responseValue))
+            .catch(error => res.status(status_codes.ERROR).send(error))
+            .finally(_ => client.close())
+    }
 
 })
 
