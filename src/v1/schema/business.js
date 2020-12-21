@@ -1,12 +1,21 @@
 // This is the validator schema for the Business model
 // It should be used as the $jsonSchema in validation
+
+
+/* pls add:
+-services that business can provide for customers
+-employees object,
+-working hours
+*/
+
 module.exports = {
     bsonType: "object",
     required: [
         "name", 
         "address", 
-        "geo_loc", 
+        "location", 
         "contact",
+        "opTime",
         "password",
         "created"
     ],
@@ -32,11 +41,33 @@ module.exports = {
                 }
             }
         },
-        geo_loc: {
+        location: {
             bsonType: "object",
             properties: {
-                lat: { bsonType: "double" },
-                lon: { bsonType: "double" }
+                type: { bsonType: "string" },
+                coordinates: { 
+                    bsonType: "array",
+                    items: { bsonType: "double" } 
+                }
+            }
+        },
+        opTime: {
+            bsonType: "object",
+            properties: {
+                start: {
+                    bsonType: "object",
+                    properties: {
+                        hour: { bsonType: 'int' },
+                        min: { bsonType: 'int' }
+                    }
+                },
+                end: {
+                    bsonType: "object",
+                    properties: {
+                        hour: { bsonType: 'int' },
+                        min: { bsonType: 'int' }
+                    }
+                }
             }
         },
         contact: {
@@ -50,11 +81,11 @@ module.exports = {
                 email: {
                     bsonType: "string",
                     description: "Cell phone number is checked by regex",
-                    pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
+                    // pattern: "^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$"
                 }
             }
         },
-        description: { 
+        description: {
             bsonType: "string",
             description: "The description is a short explanation about the business, not required"
         },
@@ -69,14 +100,6 @@ module.exports = {
         password: {
             bsonType: "string",
             description: "business login password",
-        },
-        ratings: {
-            bsonType: "array",
-            uniqueItems: true,
-            items: {
-                bsonType: "objectId",
-                description: "The rating of any service provided by the business from ratings model."
-            }
         },
         gender: {
             enum: ["male", "female", "both"],
