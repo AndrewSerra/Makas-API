@@ -12,12 +12,12 @@ router = express.Router();
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
-    host: "lin4.domainhizmetleri.com",
+    host: process.env.EMAIL_HOST,
     port: 465,
     secure: true, // true for 465, false for other ports
     auth: {
-        user: 'noreply@makasapp.com', // user
-        pass: 'noreplyPecm5835', // password
+        user: process.env.EMAIL_USER, // user
+        pass: process.env.EMAIL_PASS, // password
     },
     tls:{
         rejectUnauthorized: false
@@ -30,7 +30,8 @@ const transporter = nodemailer.createTransport({
 // change email
 router.post("/register/:userID", async (req, res) => {
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collectionUsers = db.collection(collection_names.USER);
 
     //check if the user exists
@@ -98,7 +99,8 @@ router.post("/register/:userID", async (req, res) => {
 router.post("/password", async (req, res) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collectionUsers = db.collection(collection_names.USER);
 
     //check if the user exists
@@ -202,7 +204,8 @@ router.post("/password", async (req, res) => {
 router.post("/appointment/:appointmentId", async (req, res) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collectionAppointments = db.collection(collection_names.APPOINTMENT);
     const collectionUsers = db.collection(collection_names.USER);
     const collectionEmployee = db.collection(collection_names.EMPLOYEE);
@@ -263,7 +266,8 @@ router.post("/appointment/:appointmentId", async (req, res) => {
 router.put("/appointment/:appointmentId", async (req, res) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collectionAppointments = db.collection(collection_names.APPOINTMENT);
     const collectionUsers = db.collection(collection_names.USER);
     const collectionEmployee = db.collection(collection_names.EMPLOYEE);
@@ -316,7 +320,8 @@ router.put("/appointment/:appointmentId", async (req, res) => {
 router.get("/appointment/:appointmentId", async (req, res) => {
 
     const client = await MongoClient.connect(process.env.MONGO_URI, options);
-    const db = client.db(process.env.DB_NAME);
+    const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+    const db = client.db(dbName);
     const collectionAppointments = db.collection(collection_names.APPOINTMENT);
     const collectionUsers = db.collection(collection_names.USER);
     const collectionEmployee = db.collection(collection_names.EMPLOYEE);

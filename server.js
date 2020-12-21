@@ -23,11 +23,12 @@ const PORT = process.env.PORT || 3000;
 // It will connect to database dev_test
 // Later it will be changed to production when needed
 // This is just to test the connection on startup
-check_setup('dev_test');
+const dbName = process.env.NODE_ENV === 'production' ? process.env.DB_NAME_PROD : process.env.DB_NAME;
+check_setup(dbName);
 
 // Add the routes to the app
 app.use('/v1', routerV1);
-app.use(express.static(path.join(__dirname, '../makas-dashboard/build')));
+app.use('/', express.static(path.join(__dirname, '../makas-dashboard/build')));
 app.get('*', function(req, res) {
     res.sendFile(path.join(__dirname, '../makas-dashboard/build', 'index.html'))
 })
@@ -35,9 +36,9 @@ app.get('*', function(req, res) {
 const server = app.listen(PORT, () => console.log(`Listening on port ${PORT}`)); 
 
 // Graceful shutdown code
-setInterval(() => server.getConnections(
-    (err, connections) => console.log(`${connections} connections currently open`)
-), 1000);
+// setInterval(() => server.getConnections(
+//     (err, connections) => console.log(`${connections} connections currently open`)
+// ), 1000);
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
